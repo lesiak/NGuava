@@ -5,6 +5,8 @@ VisualStudioVersion = 15.0.26730.8
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NGuava", "NGuava\NGuava.csproj", "{AD45CFC2-C8B1-473B-92A3-725488395909}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NGuava.Tests", "NGuava.Tests\NGuava.Tests.csproj", "{1319721B-F1E3-4A9C-B3F9-B335CA6CA1C2}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -15,6 +17,10 @@ Global
 		{AD45CFC2-C8B1-473B-92A3-725488395909}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{AD45CFC2-C8B1-473B-92A3-725488395909}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{AD45CFC2-C8B1-473B-92A3-725488395909}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1319721B-F1E3-4A9C-B3F9-B335CA6CA1C2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1319721B-F1E3-4A9C-B3F9-B335CA6CA1C2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1319721B-F1E3-4A9C-B3F9-B335CA6CA1C2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1319721B-F1E3-4A9C-B3F9-B335CA6CA1C2}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -69,5 +69,41 @@ namespace NGuava.Tests.Base
             var result = Joiner.On(", ").UseForNull("null").Join(testInput);
             Assert.AreEqual("a, null", result);
         }
+
+
+        [TestMethod]
+        public void TestStringAndNullSkipped()
+        {
+            var testInput = new[] { "a", null };
+            var result = Joiner.On(", ").SkipNulls().Join(testInput);
+            Assert.AreEqual("a", result);
+        }
+
+
+        [TestMethod]
+        public void TestNullAndStringSkipped()
+        {
+            var testInput = new[] { null, "b" };
+            var result = Joiner.On(", ").SkipNulls().Join(testInput);
+            Assert.AreEqual("b", result);
+        }
+
+
+        [TestMethod]
+        public void TestNullInTheMiddleSkipped()
+        {
+            var testInput = new[] { "a", null, "b" };
+            var result = Joiner.On(", ").SkipNulls().Join(testInput);
+            Assert.AreEqual("a, b", result);
+        }
+
+
+        [TestMethod]
+        public void TestMultipleNullsInFrontSkipped()
+        {
+            var testInput = new[] { null, null, "b" };
+            var result = Joiner.On(", ").SkipNulls().Join(testInput);
+            Assert.AreEqual("b", result);
+        }
     }
 }

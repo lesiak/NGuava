@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using static NGuava.Base.Preconditions;
 
 namespace NGuava.Base
 {
@@ -16,13 +17,13 @@ namespace NGuava.Base
 
         private Joiner(string separator)
         {
-            this.separator = Preconditions.CheckNotNull(separator);
+            this.separator = CheckNotNull(separator);
         }
 
 
-        public StringBuilder AppendTo<T>(StringBuilder stringBuilder, IEnumerator<T> parts)
+        public virtual StringBuilder AppendTo<T>(StringBuilder stringBuilder, IEnumerator<T> parts)
         {
-            Preconditions.CheckNotNull(stringBuilder);
+            CheckNotNull(stringBuilder);
             if (parts.MoveNext())
             {
                 stringBuilder.Append(ToString(parts.Current));
@@ -39,7 +40,7 @@ namespace NGuava.Base
 
         protected virtual string ToString(object part)
         {
-            Preconditions.CheckNotNull(part);
+            CheckNotNull(part);
             return (part is string s) ? s : part.ToString();
         }
 
@@ -58,10 +59,15 @@ namespace NGuava.Base
 
         public virtual Joiner UseForNull(string nullText)
         {
-            Preconditions.CheckNotNull(nullText);
+            CheckNotNull(nullText);
             return new UseForNullJoiner(this, nullText);
         }
 
+
+        public virtual Joiner SkipNulls()
+        {
+            return new SkipNullsJoiner(this);
+        }
 
         private class UseForNullJoiner : Joiner
         {
@@ -84,6 +90,52 @@ namespace NGuava.Base
             {
                 throw new InvalidOperationException("already specified UseForNull");
             }
+
+            public override Joiner SkipNulls()
+            {
+                throw new InvalidOperationException("already specified useForNull");
+            }
+        }
+
+
+        private class SkipNullsJoiner : Joiner
+        {
+
+            public SkipNullsJoiner(Joiner prototype) : base(prototype.separator)
+            { 
+            }
+
+
+            public override StringBuilder AppendTo<T>(StringBuilder stringBuilder, IEnumerator<T> parts)
+            {
+                CheckNotNull(stringBuilder, "stringBuilder");
+                CheckNotNull(parts, "parts");
+                while (parts.MoveNext())
+                {
+                    var part = parts.Current;
+                    if (part != null)
+                    {
+                        stringBuilder.Append(ToString(part));
+                        break;
+                    }
+                }
+                while (parts.MoveNext())
+                {
+                    var part = parts.Current;
+                    if (part != null)
+                    {
+                        stringBuilder.Append(separator);
+                        stringBuilder.Append(ToString(part));
+                    }
+                }
+                return stringBuilder;
+            }
+
+            public override Joiner UseForNull(String nullText)
+            {
+                throw new InvalidOperationException("already specified skipNulls");
+            }
         }
     }
+
 }

@@ -15,6 +15,12 @@ namespace NGuava.Base
         }
 
 
+        public static Joiner On(char separator)
+        {
+            return new Joiner($"{separator}");
+        }
+
+
         private Joiner(string separator)
         {
             this.separator = CheckNotNull(separator);

@@ -11,18 +11,17 @@ namespace NGuava.Tests.Base
 
         private static readonly Joiner J = Joiner.On("-");
 
-        // <Integer> needed to prevent warning :(
-        private static readonly IEnumerable<string> ITERABLE_ = new List<string>();
+        private static readonly IList<string> ITERABLE_ = new List<string>();
 
-        private static readonly IEnumerable<string> ITERABLE_1 = new List<string> {"1"};
-        private static readonly IEnumerable<string> ITERABLE_12 = new List<string> {"1", "2"};
-        private static readonly IEnumerable<string> ITERABLE_123 = new List<string> {"1", "2", "3"};
-        private static readonly IEnumerable<string> ITERABLE_NULL = new List<string> {null};
-        private static readonly IEnumerable<string> ITERABLE_NULL_NULL = new List<string> {null, null};
-        private static readonly IEnumerable<string> ITERABLE_NULL_1 = new List<string> {null, "1"};
-        private static readonly IEnumerable<string> ITERABLE_1_NULL = new List<string> {"1", null};
-        private static readonly IEnumerable<string> ITERABLE_1_NULL_2 = new List<string> {"1", null, "2"};
-        private static readonly IEnumerable<string> ITERABLE_FOUR_NULLS = new List<string> {null, null, null, null};
+        private static readonly IList<string> ITERABLE_1 = new List<string> {"1"};
+        private static readonly IList<string> ITERABLE_12 = new List<string> {"1", "2"};
+        private static readonly IList<string> ITERABLE_123 = new List<string> {"1", "2", "3"};
+        private static readonly IList<string> ITERABLE_NULL = new List<string> {null};
+        private static readonly IList<string> ITERABLE_NULL_NULL = new List<string> {null, null};
+        private static readonly IList<string> ITERABLE_NULL_1 = new List<string> {null, "1"};
+        private static readonly IList<string> ITERABLE_1_NULL = new List<string> {"1", null};
+        private static readonly IList<string> ITERABLE_1_NULL_2 = new List<string> {"1", null, "2"};
+        private static readonly IList<string> ITERABLE_FOUR_NULLS = new List<string> {null, null, null, null};
 
         [TestMethod]
         public void TestNoSpecialNullBehavior()
@@ -68,113 +67,81 @@ namespace NGuava.Tests.Base
         }
 
         [TestMethod]
-        public void TestOneString()
+        public void TestOnCharOverride()
         {
-            var testInput = new[] {"a"};
-            var result = Joiner.On(", ").Join(testInput);
-            Assert.AreEqual("a", result);
+            var onChar = Joiner.On('-');
+            CheckNoOutput(onChar, ITERABLE_);
+            CheckResult(onChar, ITERABLE_1, "1");
+            CheckResult(onChar, ITERABLE_12, "1-2");
+            CheckResult(onChar, ITERABLE_123, "1-2-3");
         }
-
 
         [TestMethod]
-        public void TestOneInt()
+        public void TestSkipNulls()
         {
-            var testInput = new[] {1};
-            var result = Joiner.On(", ").Join(testInput);
-            Assert.AreEqual("1", result);
+            var skipNulls = J.SkipNulls();
+            CheckNoOutput(skipNulls, ITERABLE_);
+            CheckNoOutput(skipNulls, ITERABLE_NULL);
+            CheckNoOutput(skipNulls, ITERABLE_NULL_NULL);
+            CheckNoOutput(skipNulls, ITERABLE_FOUR_NULLS);
+            CheckResult(skipNulls, ITERABLE_1, "1");
+            CheckResult(skipNulls, ITERABLE_12, "1-2");
+            CheckResult(skipNulls, ITERABLE_123, "1-2-3");
+            CheckResult(skipNulls, ITERABLE_NULL_1, "1");
+            CheckResult(skipNulls, ITERABLE_1_NULL, "1");
+            CheckResult(skipNulls, ITERABLE_1_NULL_2, "1-2");
         }
-
 
         [TestMethod]
-        public void TestTwoInts()
+        public void TestUseForNull()
         {
-            var testInput = new[] {1, 2};
-            var result = Joiner.On(", ").Join(testInput);
-            Assert.AreEqual("1, 2", result);
+            var zeroForNull = J.UseForNull("0");
+            CheckNoOutput(zeroForNull, ITERABLE_);
+            CheckResult(zeroForNull, ITERABLE_1, "1");
+            CheckResult(zeroForNull, ITERABLE_12, "1-2");
+            CheckResult(zeroForNull, ITERABLE_123, "1-2-3");
+            CheckResult(zeroForNull, ITERABLE_NULL, "0");
+            CheckResult(zeroForNull, ITERABLE_NULL_NULL, "0-0");
+            CheckResult(zeroForNull, ITERABLE_NULL_1, "0-1");
+            CheckResult(zeroForNull, ITERABLE_1_NULL, "1-0");
+            CheckResult(zeroForNull, ITERABLE_1_NULL_2, "1-0-2");
+            CheckResult(zeroForNull, ITERABLE_FOUR_NULLS, "0-0-0-0");
         }
 
-
-        [TestMethod]
-        public void TestTwoStrings()
+        private static void CheckNoOutput(Joiner joiner, IList<string> parts)
         {
-            var testInput = new[] {"a", "b"};
-            var result = Joiner.On(", ").Join(testInput);
-            Assert.AreEqual("a, b", result);
+            Assert.AreEqual("", joiner.Join(parts));
+            Assert.AreEqual("", joiner.Join(parts.GetEnumerator()));
         }
 
-
-        [TestMethod]
-        [ExpectedException(typeof(NullReferenceException))]
-        public void TestStringAndNull()
-        {
-            var testInput = new[] {"a", null};
-            Joiner.On(", ").Join(testInput);
-        }
-
-
-        [TestMethod]
-        [ExpectedException(typeof(NullReferenceException))]
-        public void TestNullAndString()
-        {
-            var testInput = new[] {null, "b"};
-            Joiner.On(", ").Join(testInput);
-        }
-
-
-        [TestMethod]
-        public void TestStringAndNullSubstituted()
-        {
-            var testInput = new[] {"a", null};
-            var result = Joiner.On(", ").UseForNull("null").Join(testInput);
-            Assert.AreEqual("a, null", result);
-        }
-
-
-        [TestMethod]
-        public void TestStringAndNullSkipped()
-        {
-            var testInput = new[] {"a", null};
-            var result = Joiner.On(", ").SkipNulls().Join(testInput);
-            Assert.AreEqual("a", result);
-        }
-
-
-        [TestMethod]
-        public void TestNullAndStringSkipped()
-        {
-            var testInput = new[] {null, "b"};
-            var result = Joiner.On(", ").SkipNulls().Join(testInput);
-            Assert.AreEqual("b", result);
-        }
-
-
-        [TestMethod]
-        public void TestNullInTheMiddleSkipped()
-        {
-            var testInput = new[] {"a", null, "b"};
-            var result = Joiner.On(", ").SkipNulls().Join(testInput);
-            Assert.AreEqual("a, b", result);
-        }
-
-
-        [TestMethod]
-        public void TestMultipleNullsInFrontSkipped()
-        {
-            var testInput = new[] {null, null, "b"};
-            var result = Joiner.On(", ").SkipNulls().Join(testInput);
-            Assert.AreEqual("b", result);
-        }
-
-        private static void CheckNoOutput(Joiner joiner, IEnumerable<string> set)
-        {
-            Assert.AreEqual("", joiner.Join(set));
-            Assert.AreEqual("", joiner.Join(set.GetEnumerator()));
-        }
-
-        private static void CheckResult(Joiner joiner, IEnumerable<string> parts, string expected)
+        private static void CheckResult(Joiner joiner, IList<string> parts, string expected)
         {
             Assert.AreEqual(expected, joiner.Join(parts));
             Assert.AreEqual(expected, joiner.Join(parts.GetEnumerator()));
+        }
+
+        [TestMethod]
+        [ExpectedException(typeof(InvalidOperationException))]
+        public void Test_UseForNull_SkipNulls()
+        {
+            Joiner j = Joiner.On("x").UseForNull("y");
+            j = j.SkipNulls();
+        }
+
+        [TestMethod]
+        [ExpectedException(typeof(InvalidOperationException))]
+        public void Test_SkipNulls_UseForNull()
+        {
+            Joiner j = Joiner.On("x").SkipNulls();
+            j = j.UseForNull("y");   
+        }
+
+        [TestMethod]
+        [ExpectedException(typeof(InvalidOperationException))]
+        public void Test_UseForNull_Twice()
+        {
+            Joiner j = Joiner.On("x").UseForNull("y");
+            j = j.UseForNull("y");
         }
 
     }

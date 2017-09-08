@@ -18,7 +18,7 @@ namespace NGuava.Base
 
         public static Joiner On(char separator)
         {
-            return new Joiner($"{separator}");
+            return new Joiner(separator.ToString());
         }
 
 

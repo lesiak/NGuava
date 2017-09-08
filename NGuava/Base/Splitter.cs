@@ -157,7 +157,7 @@ namespace NGuava.Base
                 this.toSplit = toSplit;
             }
 
-            protected override string computeNext()
+            protected override string ComputeNext()
             {
                 /*
                  * The returned string will be from the end of the last match to the
@@ -235,7 +235,7 @@ namespace NGuava.Base
 
                     return toSplit.Substring(start, end - start);
                 }
-                return endOfData();
+                return EndOfData();
             }
         }
     }

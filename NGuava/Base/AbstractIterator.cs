@@ -7,63 +7,79 @@ namespace NGuava.Base
     public abstract class AbstractIterator<T> : IEnumerator<T> where T: class
     {
         private enum State {
-            READY, NOT_READY, DONE, FAILED,
+            /** We have computed the next element. */
+            READY,
+
+            /** We haven't yet computed any element. */
+            NOT_READY,
+
+
+            /** We have reached the end of the data and are finished. */
+            DONE,
+
+            /** We've suffered an exception and are kaput. */
+            FAILED,
         }
         
         private State state = State.NOT_READY;
         
-        protected AbstractIterator() {}
-        
         private T nextVal;
 
-        protected abstract T computeNext();
+        /// <summary>
+        /// 
+        /// Returns the next element. <b>Note:</b> the implementation must call 
+        /// {@link #EndOfData()} when there are no elements left in the iteration. Failure to
+        /// do so could result in an infinite loop.
+        /// </summary>
+        /// <returns></returns>
+        protected abstract T ComputeNext();
 
-        protected T endOfData() {
+        protected T EndOfData() {
             state = State.DONE;
             return null;
         }
 
         public bool MoveNext()
         {
-            return hasNext();
-        }
-
-        public T Current => next();
-
-        object IEnumerator.Current => next();
-
-        public bool hasNext() {
             Preconditions.CheckState(state != State.FAILED);
-            switch (state) {
-                case State.DONE:
-                    return false;
-                case State.READY:
-                    return true;
-                
+            if (state == State.DONE)
+            {
+                return false;
             }
-            return tryToComputeNext();
+            return TryToComputeNext();
         }
 
-        private bool tryToComputeNext() {
+
+        private bool TryToComputeNext()
+        {
             state = State.FAILED; // temporary pessimism
-            nextVal = computeNext();
-            if (state != State.DONE) {
+            nextVal = ComputeNext();
+            if (state != State.DONE)
+            {
                 state = State.READY;
                 return true;
             }
             return false;
         }
 
-       
-        public T next() {
-            if (!hasNext()) {
-                throw new InvalidOperationException();
+        public T Current
+        {
+            get {
+                Preconditions.CheckState(state != State.FAILED);
+                if (state == State.DONE || state == State.NOT_READY)
+                {
+                    throw new InvalidOperationException();
+                }
+              // state = State.NOT_READY;
+              // T result = nextVal;
+              //  nextVal = null;
+                return nextVal;
             }
-            state = State.NOT_READY;
-            T result = nextVal;
-            nextVal = null;
-            return result;
         }
+
+        object IEnumerator.Current => Current;
+
+        
 
         public void Reset()
         {

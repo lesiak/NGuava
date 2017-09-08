@@ -11,7 +11,7 @@ namespace NGuava.Tests.Base
         [TestMethod]
         public void TestSplitter()
         {
-            var splitter = Splitter.on(',');
+            var splitter = Splitter.On(',');
             var enumerable = splitter.split("a, b, b,c");
             var result = new List<string>(enumerable);
             CollectionAssert.AreEqual(new List<string> {"a", " b", " b", "c"}, result);

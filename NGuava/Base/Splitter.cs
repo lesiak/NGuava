@@ -9,19 +9,19 @@ namespace NGuava.Base
     {
         private readonly CharMatcher trimmer;
         private readonly bool omitEmptyStrings;
-        private readonly Strategy strategy;
+        private readonly ISplittingStrategy strategy;
         private readonly int limit;
 
-        private interface Strategy
+        private interface ISplittingStrategy
         {
-            IEnumerator<string> iterator(Splitter splitter, string toSplit);
+            IEnumerable<string> MakeEnumerable(Splitter splitter, string toSplit);
         }
         
-        private Splitter(Strategy strategy) : this(strategy, false, CharMatcher.NONE, int.MaxValue) {
+        private Splitter(ISplittingStrategy strategy) : this(strategy, false, CharMatcher.NONE, int.MaxValue) {
             
         }
 
-        private Splitter(Strategy strategy, bool omitEmptyStrings,
+        private Splitter(ISplittingStrategy strategy, bool omitEmptyStrings,
             CharMatcher trimmer, int limit) {
             this.strategy = strategy;
             this.omitEmptyStrings = omitEmptyStrings;
@@ -31,87 +31,64 @@ namespace NGuava.Base
 
         /**
    * Returns a splitter that uses the given single-character separator. For
-   * example, {@code Splitter.on(',').split("foo,,bar")} returns an iterable
+   * example, {@code Splitter.On(',').split("foo,,bar")} returns an iterable
    * containing {@code ["foo", "", "bar"]}.
    *
    * @param separator the character to recognize as a separator
    * @return a splitter, with default settings, that recognizes that separator
    */
-        public static Splitter on(char separator) {
-            return on(CharMatcher.isChar(separator));
+        public static Splitter On(char separator) {
+            return On(CharMatcher.isChar(separator));
         }
         
         
         /**
    * Returns a splitter that considers any single character matched by the
    * given {@code CharMatcher} to be a separator. For example, {@code
-   * Splitter.on(CharMatcher.anyOf(";,")).split("foo,;bar,quux")} returns an
+   * Splitter.On(CharMatcher.anyOf(";,")).split("foo,;bar,quux")} returns an
    * iterable containing {@code ["foo", "", "bar", "quux"]}.
    *
    * @param separatorMatcher a {@link CharMatcher} that determines whether a
    *     character is a separator
    * @return a splitter, with default settings, that uses this matcher
    */
-        public static Splitter on(CharMatcher separatorMatcher) {
+        public static Splitter On(CharMatcher separatorMatcher) {
             Preconditions.CheckNotNull(separatorMatcher);
 
-            return new Splitter(new CharSequenceStrategy(separatorMatcher));
+            return new Splitter(new CharMatcherSplitterStrategy(separatorMatcher));
         }
         
         public IEnumerable<string> split(string sequence) {
             Preconditions.CheckNotNull(sequence);
-            return new MyEnumerable(this, sequence);
-        }
-
-        class MyEnumerable : IEnumerable<string>
-
-        {
-            private Splitter splitter;
-            private string sequence;
-
-            public MyEnumerable(Splitter splitter, string sequence)
-            {
-                this.splitter = splitter;
-                this.sequence = sequence;
-            }
-
-            public IEnumerator<string> GetEnumerator()
-            {
-                return splitter.splittingIterator(sequence);
-            }
-
-            IEnumerator IEnumerable.GetEnumerator()
-            {
-                return GetEnumerator();
-            }
+            return MakesSlittingEnumerable(sequence); ;
         }
         
-        private IEnumerator<string> splittingIterator(string sequence) {
-            return strategy.iterator(this, sequence);
+        private IEnumerable<string> MakesSlittingEnumerable(string sequence) {
+            return strategy.MakeEnumerable(this, sequence);
         }
         
 
-        class CharSequenceStrategy : Strategy
+        class CharMatcherSplitterStrategy : ISplittingStrategy
         {
             private readonly CharMatcher separatorMatcher;
 
-            public CharSequenceStrategy(CharMatcher separatorMatcher)
+            public CharMatcherSplitterStrategy(CharMatcher separatorMatcher)
             {
                 this.separatorMatcher = separatorMatcher;
             }
 
-            public IEnumerator<string> iterator(Splitter splitter, string toSplit)
+            public IEnumerable<string> MakeEnumerable(Splitter splitter, string toSplit)
             {
-                return new CharSequenceSplittingIterator(splitter, toSplit, separatorMatcher);
+                return new CharMatcherSplittingEnumerable(splitter, toSplit, separatorMatcher);
             }
 
-            class CharSequenceSplittingIterator : SplittingIterator
-            {
-               
+            class CharMatcherSplittingEnumerable : SplittingEnumerable
+            { 
                 private readonly CharMatcher separatorMatcher;
 
-                public CharSequenceSplittingIterator(Splitter splitter, string toSplit, CharMatcher separatorMatcher)
-                : base(splitter, toSplit)
+                public CharMatcherSplittingEnumerable(Splitter splitter, 
+                    string toSplit, 
+                    CharMatcher separatorMatcher) : base(splitter, toSplit)
                 {
                     this.separatorMatcher = separatorMatcher;
                 }
@@ -125,13 +102,13 @@ namespace NGuava.Base
                 }
             }
         }
-        
 
-        private abstract class SplittingIterator : AbstractIterator<string>
+
+        private abstract class SplittingEnumerable : IEnumerable<string>
         {
             internal readonly string toSplit;
             private readonly CharMatcher trimmer;
-            readonly bool omitEmptyStrings;
+            private readonly bool omitEmptyStrings;
 
             /**
              * Returns the first index in {@code toSplit} at or after {@code start}
@@ -149,7 +126,7 @@ namespace NGuava.Base
             int offset = 0;
             int limit;
 
-            protected SplittingIterator(Splitter splitter, string toSplit)
+            protected SplittingEnumerable(Splitter splitter, string toSplit)
             {
                 this.trimmer = splitter.trimmer;
                 this.omitEmptyStrings = splitter.omitEmptyStrings;
@@ -157,7 +134,12 @@ namespace NGuava.Base
                 this.toSplit = toSplit;
             }
 
-            protected override string ComputeNext()
+            IEnumerator IEnumerable.GetEnumerator()
+            {
+                return GetEnumerator();
+            }
+
+            public IEnumerator<string> GetEnumerator()
             {
                 /*
                  * The returned string will be from the end of the last match to the
@@ -165,9 +147,10 @@ namespace NGuava.Base
                  * returned substring, while offset is the place to start looking for a
                  * separator.
                  */
-                int nextStart = offset;
+
                 while (offset != -1)
                 {
+                    int nextStart = offset;
                     int start = nextStart;
                     int end;
 
@@ -233,9 +216,8 @@ namespace NGuava.Base
                         limit--;
                     }
 
-                    return toSplit.Substring(start, end - start);
+                    yield return toSplit.Substring(start, end - start);
                 }
-                return EndOfData();
             }
         }
     }

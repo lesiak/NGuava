@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Text;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using NGuava.Base;
 
@@ -8,7 +9,6 @@ namespace NGuava.Tests.Base
     [TestClass]
     public class JoinerTest
     {
-
         private static readonly Joiner J = Joiner.On("-");
 
         private static readonly IList<string> ITERABLE_ = new List<string>();
@@ -124,7 +124,7 @@ namespace NGuava.Tests.Base
         [ExpectedException(typeof(InvalidOperationException))]
         public void Test_UseForNull_SkipNulls()
         {
-            Joiner j = Joiner.On("x").UseForNull("y");
+            var j = Joiner.On("x").UseForNull("y");
             j = j.SkipNulls();
         }
 
@@ -132,18 +132,50 @@ namespace NGuava.Tests.Base
         [ExpectedException(typeof(InvalidOperationException))]
         public void Test_SkipNulls_UseForNull()
         {
-            Joiner j = Joiner.On("x").SkipNulls();
-            j = j.UseForNull("y");   
+            var j = Joiner.On("x").SkipNulls();
+            j = j.UseForNull("y");
         }
 
         [TestMethod]
         [ExpectedException(typeof(InvalidOperationException))]
         public void Test_UseForNull_Twice()
         {
-            Joiner j = Joiner.On("x").UseForNull("y");
+            var j = Joiner.On("x").UseForNull("y");
             j = j.UseForNull("y");
         }
 
-    }
+        [TestMethod]
+        public void TestMap()
+        {
+            var j = Joiner.On(";").withKeyValueSeparator(":");
+            Assert.AreEqual("", j.Join(new Dictionary<string, string>()));
+           
+            var mapWithNulls = new Dictionary<string, string>
+            {
+                {"a", null},
+                {"b", null}
+            };
 
+            try
+            {
+                j.Join(mapWithNulls);
+                Assert.Fail();
+            }
+            catch (NullReferenceException)
+            {
+            }
+
+            Assert.AreEqual("a:00;b:00", j.UseForNull("00").Join(mapWithNulls));
+
+            var mapInts = new Dictionary<int, int>
+            {
+                {1, 2},
+                {3, 4},
+                {5, 6}
+            };
+            var sb = new StringBuilder();
+            j.AppendTo(sb, mapInts);
+            Assert.AreEqual("1:2;3:4;5:6", sb.ToString());
+        }
+    }
 }

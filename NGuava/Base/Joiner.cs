@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Text;
 using static NGuava.Base.Preconditions;
@@ -75,12 +76,23 @@ namespace NGuava.Base
             return new SkipNullsJoiner(this);
         }
 
+
+        /// <summary>
+        /// Returns a { @code MapJoiner } using the given key-value separator, and the same configuration as
+        /// this {@code Joiner} otherwise.
+        /// </summary>
+        /// <param name="keyValueSeparator"></param>
+        /// <returns></returns>
+        public MapJoiner withKeyValueSeparator(string keyValueSeparator)
+        {
+            return new MapJoiner(this, keyValueSeparator);
+        }
+
         private class UseForNullJoiner : Joiner
         {
             private readonly string nullText;
 
-
-            public UseForNullJoiner(Joiner prototype, string nullText) : base(prototype.separator)
+            internal UseForNullJoiner(Joiner prototype, string nullText) : base(prototype.separator)
             {
                 this.nullText = nullText;
             }
@@ -106,9 +118,8 @@ namespace NGuava.Base
 
         private class SkipNullsJoiner : Joiner
         {
-
-            public SkipNullsJoiner(Joiner prototype) : base(prototype.separator)
-            { 
+            internal SkipNullsJoiner(Joiner prototype) : base(prototype.separator)
+            {
             }
 
 
@@ -142,6 +153,69 @@ namespace NGuava.Base
                 throw new InvalidOperationException("already specified skipNulls");
             }
         }
-    }
 
+        public class MapJoiner
+        {
+            private readonly Joiner joiner;
+            private readonly string keyValueSeparator;
+
+            internal MapJoiner(Joiner joiner, string keyValueSeparator)
+            {
+                this.joiner = joiner; // only "this" is ever passed, so don't checkNotNull
+                this.keyValueSeparator = CheckNotNull(keyValueSeparator);
+            }
+
+            public string Join<TKey, TValue>(IDictionary<TKey, TValue> map)
+            {
+                return Join(map.GetEnumerator());
+            }
+
+            public string Join<TKey, TValue>(IEnumerator<KeyValuePair<TKey, TValue>> mapEnumerator)
+            {
+                return AppendTo(new StringBuilder(), mapEnumerator).ToString();
+            }
+
+
+           /// <summary>
+           /// Appends the string representation of each entry of {@code map}, using the previously
+           /// configured separator and key-value separator, to {@code appendable}.
+           /// </summary>
+           /// <typeparam name="TKey"></typeparam>
+           /// <typeparam name="TValue"></typeparam>
+           /// <param name="stringBuilder"></param>
+           /// <param name="map"></param>
+           /// <returns></returns>
+            public StringBuilder AppendTo<TKey, TValue>(StringBuilder stringBuilder, IDictionary<TKey, TValue> map)
+            {
+                return AppendTo(stringBuilder, map.GetEnumerator());
+            }
+
+            public StringBuilder AppendTo<TKey, TValue>(StringBuilder stringBuilder,
+                IEnumerator<KeyValuePair<TKey, TValue>> parts)
+            {
+                CheckNotNull(stringBuilder);
+                if (parts.MoveNext())
+                {
+                    var entry = parts.Current;
+                    stringBuilder.Append(joiner.ToString(entry.Key));
+                    stringBuilder.Append(keyValueSeparator);
+                    stringBuilder.Append(joiner.ToString(entry.Value));
+                    while (parts.MoveNext())
+                    {
+                        stringBuilder.Append(joiner.separator);
+                        var e = parts.Current;
+                        stringBuilder.Append(joiner.ToString(e.Key));
+                        stringBuilder.Append(keyValueSeparator);
+                        stringBuilder.Append(joiner.ToString(e.Value));
+                    }
+                }
+                return stringBuilder;
+            }
+
+            public MapJoiner UseForNull(string nullText)
+            {
+                return new MapJoiner(joiner.UseForNull(nullText), keyValueSeparator);
+            }
+        }
+    }
 }

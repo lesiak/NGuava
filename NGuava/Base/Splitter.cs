@@ -1,4 +1,7 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Text;
 
 namespace NGuava.Base
 {
@@ -11,11 +14,11 @@ namespace NGuava.Base
 
         private interface Strategy
         {
-            IEnumerator iterator(Splitter splitter, string toSplit);
+            IEnumerator<string> iterator(Splitter splitter, string toSplit);
         }
         
         private Splitter(Strategy strategy) : this(strategy, false, CharMatcher.NONE, int.MaxValue) {
-            ;
+            
         }
 
         private Splitter(Strategy strategy, bool omitEmptyStrings,
@@ -26,6 +29,17 @@ namespace NGuava.Base
             this.limit = limit;
         }
 
+        /**
+   * Returns a splitter that uses the given single-character separator. For
+   * example, {@code Splitter.on(',').split("foo,,bar")} returns an iterable
+   * containing {@code ["foo", "", "bar"]}.
+   *
+   * @param separator the character to recognize as a separator
+   * @return a splitter, with default settings, that recognizes that separator
+   */
+        public static Splitter on(char separator) {
+            return on(CharMatcher.isChar(separator));
+        }
         
         
         /**
@@ -43,6 +57,39 @@ namespace NGuava.Base
 
             return new Splitter(new CharSequenceStrategy(separatorMatcher));
         }
+        
+        public IEnumerable<string> split(string sequence) {
+            Preconditions.CheckNotNull(sequence);
+            return new MyEnumerable(this, sequence);
+        }
+
+        class MyEnumerable : IEnumerable<string>
+
+        {
+            private Splitter splitter;
+            private string sequence;
+
+            public MyEnumerable(Splitter splitter, string sequence)
+            {
+                this.splitter = splitter;
+                this.sequence = sequence;
+            }
+
+            public IEnumerator<string> GetEnumerator()
+            {
+                return splitter.splittingIterator(sequence);
+            }
+
+            IEnumerator IEnumerable.GetEnumerator()
+            {
+                return GetEnumerator();
+            }
+        }
+        
+        private IEnumerator<string> splittingIterator(string sequence) {
+            return strategy.iterator(this, sequence);
+        }
+        
 
         class CharSequenceStrategy : Strategy
         {
@@ -53,7 +100,7 @@ namespace NGuava.Base
                 this.separatorMatcher = separatorMatcher;
             }
 
-            public IEnumerator iterator(Splitter splitter, string toSplit)
+            public IEnumerator<string> iterator(Splitter splitter, string toSplit)
             {
                 return new CharSequenceSplittingIterator(splitter, toSplit, separatorMatcher);
             }
@@ -186,7 +233,7 @@ namespace NGuava.Base
                         limit--;
                     }
 
-                    return toSplit.Substring(start, end);
+                    return toSplit.Substring(start, end - start);
                 }
                 return endOfData();
             }

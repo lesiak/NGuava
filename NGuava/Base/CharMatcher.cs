@@ -3,7 +3,7 @@ using System.Text;
 
 namespace NGuava.Base
 {
-    public class CharMatcher
+    public abstract class CharMatcher
     {
         // State
         readonly string description;
@@ -23,15 +23,12 @@ namespace NGuava.Base
             description = base.ToString();
         }
 
-        public static CharMatcher NONE { get; private set; }
+       
 
-        public bool matches(char c)
-        {
-            return true;
-        }
+        public abstract bool matches(char c);
 
 
-        public int indexIn(string sequence)
+        public virtual int indexIn(string sequence)
         {
             int length = sequence.Length;
             for (int i = 0; i < length; i++)
@@ -44,7 +41,7 @@ namespace NGuava.Base
             return -1;
         }
 
-        public int indexIn(string sequence, int start) {
+        public virtual int indexIn(string sequence, int start) {
             int length = sequence.Length;
             Preconditions.CheckPositionIndex(start, length);
             for (int i = start; i < length; i++) {
@@ -60,15 +57,61 @@ namespace NGuava.Base
             //return Platform.precomputeCharMatcher(this);
             return this;
         }
+        
+        /**
+   * Returns a {@code char} matcher that matches only one specified character.
+   */
+        public static CharMatcher isChar(char match) {
+            //String description = "CharMatcher.is('" + showCharacter(match) + "')";
+            var description = "Aaa";
+            return new SingleCharMatcher(match, description);
+        }
 
+
+        class SingleCharMatcher : FastMatcher
+        {
+            private readonly char match;
+
+            internal SingleCharMatcher(char match, string description) : base(description)
+            {
+                this.match = match;
+            }
+
+            public override bool matches(char c)
+            {
+                return c == match;
+            }
+           
+        }
+
+        public static readonly CharMatcher NONE = new NoneMatcher();
+
+        class NoneMatcher : FastMatcher
+        {
+
+            public override bool matches(char c)
+            {
+                return false;
+            }
+
+            public override int indexIn(string sequence)
+            {
+                return -1;
+            }
+
+            public override int indexIn(string sequence, int start)
+            {
+                return -1;
+            }
+        }
 
         abstract class FastMatcher : CharMatcher
         {
-            private FastMatcher()
+            protected FastMatcher()
             {
             }
 
-            private FastMatcher(string description) : base(description)
+            protected FastMatcher(string description) : base(description)
             {
             }
 
@@ -77,11 +120,6 @@ namespace NGuava.Base
             {
                 return this;
             }
-
-
-            //public override CharMatcher negate() {
-            //  return new NegatedFastMatcher(this);
-            // }
         }
     }
 }

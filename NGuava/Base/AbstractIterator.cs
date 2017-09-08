@@ -72,7 +72,7 @@ namespace NGuava.Base
 
         public void Dispose()
         {
-            throw new NotImplementedException();
+            
         }
     }
 }

@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Text;
 using static NGuava.Base.Preconditions;
@@ -83,7 +82,7 @@ namespace NGuava.Base
         /// </summary>
         /// <param name="keyValueSeparator"></param>
         /// <returns></returns>
-        public MapJoiner withKeyValueSeparator(string keyValueSeparator)
+        public MapJoiner WithKeyValueSeparator(string keyValueSeparator)
         {
             return new MapJoiner(this, keyValueSeparator);
         }

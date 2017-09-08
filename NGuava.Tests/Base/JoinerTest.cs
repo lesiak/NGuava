@@ -147,7 +147,7 @@ namespace NGuava.Tests.Base
         [TestMethod]
         public void TestMap()
         {
-            var j = Joiner.On(";").withKeyValueSeparator(":");
+            var j = Joiner.On(";").WithKeyValueSeparator(":");
             Assert.AreEqual("", j.Join(new Dictionary<string, string>()));
            
             var mapWithNulls = new Dictionary<string, string>

@@ -57,7 +57,12 @@ namespace NGuava.Base
 
             return new Splitter(new CharMatcherSplitterStrategy(separatorMatcher));
         }
-        
+
+        public Splitter OmitEmptyStrings()
+        {
+            return new Splitter(strategy, true, trimmer, limit);
+        }
+
         public IEnumerable<string> split(string sequence) {
             Preconditions.CheckNotNull(sequence);
             return MakesSlittingEnumerable(sequence); ;

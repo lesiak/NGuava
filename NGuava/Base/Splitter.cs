@@ -13,11 +13,77 @@ namespace NGuava.Base
         {
             IEnumerator iterator(Splitter splitter, string toSplit);
         }
+        
+        private Splitter(Strategy strategy) : this(strategy, false, CharMatcher.NONE, int.MaxValue) {
+            ;
+        }
+
+        private Splitter(Strategy strategy, bool omitEmptyStrings,
+            CharMatcher trimmer, int limit) {
+            this.strategy = strategy;
+            this.omitEmptyStrings = omitEmptyStrings;
+            this.trimmer = trimmer;
+            this.limit = limit;
+        }
+
+        
+        
+        /**
+   * Returns a splitter that considers any single character matched by the
+   * given {@code CharMatcher} to be a separator. For example, {@code
+   * Splitter.on(CharMatcher.anyOf(";,")).split("foo,;bar,quux")} returns an
+   * iterable containing {@code ["foo", "", "bar", "quux"]}.
+   *
+   * @param separatorMatcher a {@link CharMatcher} that determines whether a
+   *     character is a separator
+   * @return a splitter, with default settings, that uses this matcher
+   */
+        public static Splitter on(CharMatcher separatorMatcher) {
+            Preconditions.CheckNotNull(separatorMatcher);
+
+            return new Splitter(new CharSequenceStrategy(separatorMatcher));
+        }
+
+        class CharSequenceStrategy : Strategy
+        {
+            private readonly CharMatcher separatorMatcher;
+
+            public CharSequenceStrategy(CharMatcher separatorMatcher)
+            {
+                this.separatorMatcher = separatorMatcher;
+            }
+
+            public IEnumerator iterator(Splitter splitter, string toSplit)
+            {
+                return new CharSequenceSplittingIterator(splitter, toSplit, separatorMatcher);
+            }
+
+            class CharSequenceSplittingIterator : SplittingIterator
+            {
+               
+                private readonly CharMatcher separatorMatcher;
+
+                public CharSequenceSplittingIterator(Splitter splitter, string toSplit, CharMatcher separatorMatcher)
+                : base(splitter, toSplit)
+                {
+                    this.separatorMatcher = separatorMatcher;
+                }
+
+                internal override int separatorStart(int start) {
+                    return separatorMatcher.indexIn(toSplit, start);
+                }
+
+                internal override int separatorEnd(int separatorPosition) {
+                    return separatorPosition + 1;
+                }
+            }
+        }
+        
 
         private abstract class SplittingIterator : AbstractIterator<string>
         {
-            readonly string toSplit;
-            readonly CharMatcher trimmer;
+            internal readonly string toSplit;
+            private readonly CharMatcher trimmer;
             readonly bool omitEmptyStrings;
 
             /**

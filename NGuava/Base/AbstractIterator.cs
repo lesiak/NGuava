@@ -1,8 +1,10 @@
 ﻿using System;
+using System.Collections;
+using System.Collections.Generic;
 
 namespace NGuava.Base
 {
-    public abstract class AbstractIterator<T> where T: class
+    public abstract class AbstractIterator<T> : IEnumerator<T> where T: class
     {
         private enum State {
             READY, NOT_READY, DONE, FAILED,
@@ -21,7 +23,15 @@ namespace NGuava.Base
             return null;
         }
 
-        
+        public bool MoveNext()
+        {
+            return hasNext();
+        }
+
+        public T Current => next();
+
+        object IEnumerator.Current => next();
+
         public bool hasNext() {
             Preconditions.CheckState(state != State.FAILED);
             switch (state) {
@@ -53,6 +63,16 @@ namespace NGuava.Base
             T result = nextVal;
             nextVal = null;
             return result;
+        }
+
+        public void Reset()
+        {
+            throw new NotImplementedException();
+        }
+
+        public void Dispose()
+        {
+            throw new NotImplementedException();
         }
     }
 }

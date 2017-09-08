@@ -24,6 +24,13 @@ namespace NGuava.Base
             if (!expression)
                 throw new ArgumentException(Format(errorMessageTemplate, errorMessageArgs), "expression");
         }
+        
+        public static void CheckState(bool expression)
+        {
+            if (!expression) {
+                throw new InvalidOperationException();
+            }
+        }
 
         public static T CheckNotNull<T>(T reference) where T : class
         {
@@ -166,5 +173,7 @@ namespace NGuava.Base
 
             return builder.ToString();
         }
+
+        
     }
 }

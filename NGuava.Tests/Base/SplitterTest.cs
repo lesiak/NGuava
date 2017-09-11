@@ -132,5 +132,37 @@ namespace NGuava.Tests.Base
                 options => options.WithStrictOrdering());
         }
 
+        [TestMethod]
+        public void TestCharacterSplitEmptyTokenOmitEmptyStrings()
+        {
+            const string emptyToken = "a. .c";
+            var letters = Splitter.On('.')
+                .OmitEmptyStrings().TrimResults().split(emptyToken);
+            letters.Should().BeEquivalentTo(new List<string> { "a", "c" },
+                options => options.WithStrictOrdering());
+        }
+
+        [TestMethod]
+        public void TestCharacterSplitOnEmptyString()
+        {
+            var nothing = Splitter.On('.').split("");
+            nothing.Should().BeEquivalentTo(new List<string> { "" },
+                options => options.WithStrictOrdering());
+        }
+
+        [TestMethod]
+        public void TestCharacterSplitOnEmptyStringOmitEmptyStrings()
+        {
+            Splitter.On('.').OmitEmptyStrings().split("").Should().BeEmpty();
+        }
+
+        [TestMethod]
+        public void TestCharacterSplitOnOnlyDelimiter()
+        {
+           var blankblank = Splitter.On('.').split(".");
+            blankblank.Should().BeEquivalentTo(new List<string> { "", "" },
+                options => options.WithStrictOrdering());
+        }
+
     }
 }

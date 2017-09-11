@@ -28,12 +28,12 @@ namespace NGuava.Tests.Base
         }
 
         [TestMethod]
-        [Ignore]
         public void TestCharacterSimpleSplitToList()
         {
-            String simple = "a,b,c";
-           // List<String> letters = COMMA_SPLITTER.SplitToList(simple);
-           // assertThat(letters).containsExactly("a", "b", "c").inOrder();
+            const string simple = "a,b,c";
+            var letters = COMMA_SPLITTER.SplitToList(simple);
+            letters.Should().BeEquivalentTo(new List<string> { "a", "b", "c" },
+                options => options.WithStrictOrdering());
         }
 
         [TestMethod]

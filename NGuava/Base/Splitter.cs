@@ -82,7 +82,15 @@ namespace NGuava.Base
         private IEnumerable<string> MakesSlittingEnumerable(string sequence) {
             return strategy.MakeEnumerable(this, sequence);
         }
-        
+
+        public List<string> SplitToList(string sequence)
+        {
+            Preconditions.CheckNotNull(sequence);
+            var enumerable = MakesSlittingEnumerable(sequence);
+            var result = new List<string>(enumerable);
+            return result;
+        }
+
 
         class CharMatcherSplitterStrategy : ISplittingStrategy
         {

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Runtime.InteropServices;
 using System.Text;
 
 namespace NGuava.Base
@@ -105,7 +106,7 @@ namespace NGuava.Base
             }
         }
 
-        abstract class FastMatcher : CharMatcher
+         abstract class FastMatcher : CharMatcher
         {
             protected FastMatcher()
             {
@@ -121,5 +122,45 @@ namespace NGuava.Base
                 return this;
             }
         }
+
+        public static readonly CharMatcher Whitespace = new WhiteSpaceMatcher();
+
+        /**
+   * Determines whether a character is whitespace according to the latest Unicode standard, as
+   * illustrated
+   * <a href="http://unicode.org/cldr/utility/list-unicodeset.jsp?a=%5Cp%7Bwhitespace%7D">here</a>.
+   * This is not the same definition used by other Java APIs. (See a
+   * <a href="http://spreadsheets.google.com/pub?key=pd8dAQyHbdewRsnE5x5GzKQ">comparison of several
+   * definitions of "whitespace"</a>.)
+   *
+   * <p><b>Note:</b> as the Unicode definition evolves, we will modify this constant to keep it up
+   * to date.
+   */
+
+         class WhiteSpaceMatcher : FastMatcher
+        {
+
+            private static readonly String TABLE = "\u0009\u3000\n\u0009\u0009\u0009\u202F\u0009"
+            + "\u0009\u2001\u2006\u0009\u0009\u0009\u0009\u0009"
+            + "\u180E\u0009\u2029\u0009\u0009\u0009\u2000\u2005"
+            + "\u200A\u0009\u0009\u0009\r\u0009\u0009\u2028"
+            + "\u1680\u0009\u00A0\u0009\u2004\u2009\u0009\u0009"
+            + "\u0009\u000C\u205F\u0009\u0009\u0020\u0009\u0009"
+            + "\u2003\u2008\u0009\u0009\u0009\u000B\u0085\u0009"
+            + "\u0009\u0009\u0009\u0009\u0009\u2002\u2007\u0009";
+
+            internal WhiteSpaceMatcher() : base("WHITESPACE")
+            {
+            }
+
+            public override bool matches(char c)
+            {
+                //return TABLE.charAt((-844444961 * c) >>> 26) == c;
+                return TABLE[(int)((uint)(-844444961 * c) >> 26)] == c;
+            }
+        }
+
     }
+
+
 }

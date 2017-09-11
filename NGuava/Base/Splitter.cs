@@ -63,6 +63,17 @@ namespace NGuava.Base
             return new Splitter(strategy, true, trimmer, limit);
         }
 
+        public Splitter TrimResults()
+        {
+            return TrimResults(CharMatcher.Whitespace);
+        }
+
+        public Splitter TrimResults(CharMatcher trimmer)
+        {
+            Preconditions.CheckNotNull(trimmer);
+            return new Splitter(strategy, omitEmptyStrings, trimmer, limit);
+        }
+
         public IEnumerable<string> split(string sequence) {
             Preconditions.CheckNotNull(sequence);
             return MakesSlittingEnumerable(sequence); ;

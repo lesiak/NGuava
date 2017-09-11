@@ -123,13 +123,13 @@ namespace NGuava.Tests.Base
         }
 
         [TestMethod]
-        [Ignore]
         public void TestCharacterSplitEmptyToken()
         {
             const string emptyToken = "a. .c";
-            //var letters = Splitter.On('.').trimResults()
-            //    .split(emptyToken);
-            //assertThat(letters).containsExactly("a", "", "c").inOrder();
+            var letters = Splitter.On('.').TrimResults()
+                .split(emptyToken);
+            letters.Should().BeEquivalentTo(new List<string> { "a", "", "c" },
+                options => options.WithStrictOrdering());
         }
 
     }

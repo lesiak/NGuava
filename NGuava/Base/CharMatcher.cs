@@ -6,8 +6,8 @@ namespace NGuava.Base
 {
     public abstract class CharMatcher
     {
-        // Constant matcher factory methods
-
+        #region Constant matcher properties
+        
         /// <summary>
         /// Matches no characters.
         /// </summary>
@@ -26,10 +26,65 @@ namespace NGuava.Base
         /// date.</p>
         /// </summary>
         public static CharMatcher Whitespace => WhitespaceMatcher.INSTANCE;
-       
 
+        #endregion
+
+        #region Static factories
+
+        /// <summary>
+        /// Returns a {@code char} matcher that matches only one specified character.
+        /// </summary>
+        /// <param name="match"></param>
+        /// <returns></returns>
+        public static CharMatcher isChar(char match)
+        {
+            var description = "CharMatcher.is('" + showCharacter(match) + "')";
+            //var description = "Aaa";
+            return new SingleCharMatcher(match, description);
+        }
+
+        /// <summary>
+        /// Returns a {@code char} matcher that matches any character present in the given character
+        /// sequence.
+        /// </summary>
+        /// <param name="sequence"></param>
+        /// <returns></returns>
+        public static CharMatcher anyOf(string sequence)
+        {
+            switch (sequence.Length)
+            {
+                case 0:
+                    return None;
+                case 1:
+                    return isChar(sequence[0]);
+                case 2:
+                    return isEither(sequence[0], sequence[1]);
+                default:
+                    // TODO(user): is it potentially worth just going ahead and building a precomputed matcher?
+                    return new AnyOfMatcher(sequence);
+            }
+        }
+
+
+        #endregion
+
+        #region Abstract methods
         public abstract bool matches(char c);
+        #endregion
 
+        #region Non-static factories
+
+
+        /// <summary>
+        /// Returns a matcher that matches any character matched by either this matcher or {@code other}.
+        /// </summary>
+        public CharMatcher or(CharMatcher other)
+        {
+            return new Or(this, other);
+        }
+        #endregion
+
+        #region Text processing routines
         public virtual int indexIn(string sequence)
         {
             int length = sequence.Length;
@@ -57,47 +112,21 @@ namespace NGuava.Base
             return -1;
         }
 
+        #endregion
+
         public virtual CharMatcher precomputed()
         {
             //return Platform.precomputeCharMatcher(this);
             return this;
         }
 
-        /**
-   * Returns a {@code char} matcher that matches only one specified character.
-   */
-        public static CharMatcher isChar(char match)
-        {
-            var description = "CharMatcher.is('" + showCharacter(match) + "')";
-            //var description = "Aaa";
-            return new SingleCharMatcher(match, description);
-        }
 
         private static CharMatcher isEither(char match1, char match2)
         {
             return new EitherCharMatcher(match1, match2);
         }
 
-        /**
-   * Returns a {@code char} matcher that matches any character present in the given character
-   * sequence.
-   */
-        public static CharMatcher anyOf(string sequence)
-        {
-            switch (sequence.Length)
-            {
-                case 0:
-                    return None;
-                case 1:
-                    return isChar(sequence[0]);
-                case 2:
-                    return isEither(sequence[0], sequence[1]);
-                default:
-                    // TODO(user): is it potentially worth just going ahead and building a precomputed matcher?
-                    return new AnyOfMatcher(sequence);
-            }
-        }
-
+   
 
         private static String showCharacter(char c)
         {
@@ -111,6 +140,31 @@ namespace NGuava.Base
             return new string(tmp);
         }
 
+        #region Fast matchers
+        /** A matcher for which precomputation will not yield any significant benefit. */
+        abstract class FastMatcher : CharMatcher
+        {
+            public sealed override CharMatcher precomputed()
+            {
+                return this;
+            }
+        }
+
+        /** {@link FastMatcher} which overrides {@code toString()} with a custom name. */
+        abstract class NamedFastMatcher : FastMatcher
+        {
+            private readonly string description;
+
+            protected NamedFastMatcher(string description)
+            {
+                this.description = Preconditions.CheckNotNull(description);
+            }
+
+            public override string ToString()
+            {
+                return description;
+            }
+        }
 
         class SingleCharMatcher : NamedFastMatcher
         {
@@ -148,7 +202,9 @@ namespace NGuava.Base
                 return "CharMatcher.anyOf(\"" + showCharacter(match1) + showCharacter(match2) + "\")";
             }
         }
+        #endregion
 
+        #region Static constant implementation classes
         class AnyOfMatcher : CharMatcher
         {
             private readonly char[] chars;
@@ -182,7 +238,7 @@ namespace NGuava.Base
             private readonly CharMatcher first;
             private readonly CharMatcher second;
 
-            Or(CharMatcher a, CharMatcher b)
+            internal Or(CharMatcher a, CharMatcher b)
             {
                 first = Preconditions.CheckNotNull(a);
                 second = Preconditions.CheckNotNull(b);
@@ -198,8 +254,8 @@ namespace NGuava.Base
                 return "CharMatcher.or(" + first + ", " + second + ")";
             }
         }
-
        
+
 
         class NoneMatcher : FastMatcher
         {
@@ -222,30 +278,7 @@ namespace NGuava.Base
             }
         }
 
-        /** A matcher for which precomputation will not yield any significant benefit. */
-        abstract class FastMatcher : CharMatcher
-        {
-            public sealed override CharMatcher precomputed()
-            {
-                return this;
-            }
-        }
-
-        /** {@link FastMatcher} which overrides {@code toString()} with a custom name. */
-        abstract class NamedFastMatcher : FastMatcher
-        {
-            private readonly string description;
-
-            protected NamedFastMatcher(string description)
-            {
-                this.description = Preconditions.CheckNotNull(description);
-            }
-
-            public override string ToString()
-            {
-                return description;
-            }
-        }
+        
 
 
 /**
@@ -284,6 +317,7 @@ namespace NGuava.Base
                 return TABLE[(int) ((uint) (MULTIPLIER * c) >> SHIFT)] == c;
             }
         }
+        #endregion
     }
 
 

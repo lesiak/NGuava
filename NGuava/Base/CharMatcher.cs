@@ -63,11 +63,63 @@ namespace NGuava.Base
    * Returns a {@code char} matcher that matches only one specified character.
    */
         public static CharMatcher isChar(char match) {
-            //String description = "CharMatcher.is('" + showCharacter(match) + "')";
-            var description = "Aaa";
+            var description = "CharMatcher.is('" + showCharacter(match) + "')";
+            //var description = "Aaa";
             return new SingleCharMatcher(match, description);
         }
 
+        private static CharMatcher isEither(
+            char match1,
+            char match2)
+        {
+            var description = "CharMatcher.anyOf(\"" +
+                                showCharacter(match1) + showCharacter(match2) + "\")";
+            return new EitherCharMatcher(match1, match2, description);
+        }
+
+        /**
+   * Returns a {@code char} matcher that matches any character present in the given character
+   * sequence.
+   */
+        public static CharMatcher anyOf(string sequence)
+        {
+            switch (sequence.Length)
+            {
+                case 0:
+                    return CharMatcher.NONE;
+                case 1:
+                    return isChar(sequence[0]);
+                case 2:
+                    return isEither(sequence[0], sequence[1]);
+                // continue below to handle the general case
+            }
+            // TODO(user): is it potentially worth just going ahead and building a precomputed matcher?
+            char[] chars = sequence.ToCharArray();
+            Array.Sort(chars);
+           
+            StringBuilder description = new StringBuilder("CharMatcher.anyOf(\"");
+            foreach (char c in chars)
+            {
+                description.Append(showCharacter(c));
+            }
+            description.Append("\")");
+            return new AnyOfMatcher(chars, description.ToString());
+        }
+
+
+        private static String showCharacter(char c)
+        {
+            String hex = "0123456789ABCDEF";
+            char[] tmp = {'\\', 'u', '\0', '\0', '\0', '\0'};
+            for (int i = 0; i < 4; i++)
+            {
+                tmp[5 - i] = hex[c & 0xF];
+                c >>= 4;
+            }
+            return new string(tmp);
+        }
+
+        
 
         class SingleCharMatcher : FastMatcher
         {
@@ -82,14 +134,45 @@ namespace NGuava.Base
             {
                 return c == match;
             }
-           
+        }
+
+        class EitherCharMatcher : FastMatcher
+        {
+            private readonly char match1;
+            private readonly char match2;
+
+            internal EitherCharMatcher(char match1,
+                char match2, string description) : base(description)
+            {
+                this.match1 = match1;
+                this.match2 = match2;
+            }
+
+            public override bool matches(char c)
+            {
+                return c == match1 || c == match2;
+            }
+        }
+
+        class AnyOfMatcher : CharMatcher
+        {
+            private readonly char[] chars;
+
+            internal AnyOfMatcher(char[] chars, string description) : base(description)
+            {
+                this.chars = chars;
+            }
+
+            public override bool matches(char c)
+            {
+                return Array.BinarySearch(chars, c) >= 0;
+            }
         }
 
         public static readonly CharMatcher NONE = new NoneMatcher();
 
         class NoneMatcher : FastMatcher
         {
-
             public override bool matches(char c)
             {
                 return false;
@@ -106,7 +189,7 @@ namespace NGuava.Base
             }
         }
 
-         abstract class FastMatcher : CharMatcher
+        abstract class FastMatcher : CharMatcher
         {
             protected FastMatcher()
             {

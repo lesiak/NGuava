@@ -164,5 +164,54 @@ namespace NGuava.Tests.Base
                 options => options.WithStrictOrdering());
         }
 
+        [TestMethod]
+        public void TestCharacterSplitOnOnlyDelimitersOmitEmptyStrings()
+        {
+            var empty = Splitter.On('.').OmitEmptyStrings().split("...");
+            empty.Should().BeEmpty();
+        }
+
+        [TestMethod]
+        [Ignore]
+        public void TestCharacterSplitWithTrim()
+        {
+            const string jacksons = "arfo(Marlon)aorf, (Michael)orfa, afro(Jackie)orfa, "
+                              + "ofar(Jemaine), aff(Tito)";
+           // var family = COMMA_SPLITTER
+           //     .TrimResults(CharMatcher.anyOf("afro").or(CharMatcher.whitespace()))
+           //     .split(jacksons);
+          //  assertThat(family)
+          //      .containsExactly("(Marlon)", "(Michael)", "(Jackie)", "(Jemaine)", "(Tito)")
+           //     .inOrder();
+        }
+
+        [TestMethod]
+        public void TestStringSimpleSplit()
+        {
+            const string simple = "a,b,c";
+            var letters = Splitter.On(',').split(simple);
+            letters.Should().BeEquivalentTo(new List<string> { "a", "b", "c" },
+                options => options.WithStrictOrdering());
+        }
+
+        [TestMethod]
+        public void TestStringSimpleSplitWithNoDelimiter()
+        {
+            const string simple = "a,b,c";
+            var letters = Splitter.On('.').split(simple);
+            letters.Should().BeEquivalentTo(new List<string> { "a,b,c" },
+                options => options.WithStrictOrdering());
+        }
+
+        [TestMethod]
+        public void TestStringSplitWithDoubleDelimiter()
+        {
+            const string doubled = "a,,b,c";
+            var letters = Splitter.On(',').split(doubled);
+            letters.Should().BeEquivalentTo(new List<string> { "a", "", "b", "c" },
+                options => options.WithStrictOrdering());
+           
+        }
+
     }
 }

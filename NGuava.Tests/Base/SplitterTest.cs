@@ -100,5 +100,37 @@ namespace NGuava.Tests.Base
                     options => options.WithStrictOrdering());
         }
 
+        [TestMethod]
+        [Ignore]
+        public void TestCharacterSplitWithMatcherDelimiter()
+        {
+            //var testCharacteringMotto = Splitter
+            //    .On(CharMatcher.whitespace())
+            //    .split("Testing\nrocks\tDebugging sucks");
+            //assertThat(testCharacteringMotto)
+            //    .containsExactly("Testing", "rocks", "Debugging", "sucks")
+            //    .inOrder();
+        }
+
+        [TestMethod]
+        public void TestCharacterSplitWithDoubleDelimiterOmitEmptyStrings()
+        {
+            const string doubled = "a..b.c";
+            var letters = Splitter.On('.')
+                .OmitEmptyStrings().split(doubled);
+            letters.Should().BeEquivalentTo(new List<string> { "a", "b", "c" },
+                options => options.WithStrictOrdering());
+        }
+
+        [TestMethod]
+        [Ignore]
+        public void TestCharacterSplitEmptyToken()
+        {
+            const string emptyToken = "a. .c";
+            //var letters = Splitter.On('.').trimResults()
+            //    .split(emptyToken);
+            //assertThat(letters).containsExactly("a", "", "c").inOrder();
+        }
+
     }
 }

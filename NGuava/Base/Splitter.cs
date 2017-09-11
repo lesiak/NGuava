@@ -17,7 +17,7 @@ namespace NGuava.Base
             IEnumerable<string> MakeEnumerable(Splitter splitter, string toSplit);
         }
         
-        private Splitter(ISplittingStrategy strategy) : this(strategy, false, CharMatcher.NONE, int.MaxValue) {
+        private Splitter(ISplittingStrategy strategy) : this(strategy, false, CharMatcher.None, int.MaxValue) {
             
         }
 

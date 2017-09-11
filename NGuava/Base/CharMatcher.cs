@@ -6,28 +6,29 @@ namespace NGuava.Base
 {
     public abstract class CharMatcher
     {
-        // State
-        readonly string description;
+        // Constant matcher factory methods
 
-        // Constructors
+        /// <summary>
+        /// Matches no characters.
+        /// </summary>
+        /// <returns></returns>
+        public static CharMatcher None => NoneMatcher.INSTANCE;
 
-        /**
-         * Sets the {@code toString()} from the given description.
-         */
-        CharMatcher(string description)
-        {
-            this.description = description;
-        }
-
-        protected CharMatcher()
-        {
-            description = base.ToString();
-        }
-
+        /// <summary>
+        /// Determines whether a character is whitespace according to the latest Unicode standard, as
+        /// illustrated
+        /// <a href = "http://unicode.org/cldr/utility/list-unicodeset.jsp?a=%5Cp%7Bwhitespace%7D" > here </ a >.
+        /// This is not the same definition used by other Java APIs. (See a
+        /// <a href = "https://goo.gl/Y6SLWx" > comparison of several definitions of
+        /// "whitespace"</a>.)
+        ///
+        /// <p><b>Note:</b> as the Unicode definition evolves, we will modify this matcher to keep it up to
+        /// date.</p>
+        /// </summary>
+        public static CharMatcher Whitespace => WhitespaceMatcher.INSTANCE;
        
 
         public abstract bool matches(char c);
-
 
         public virtual int indexIn(string sequence)
         {
@@ -42,39 +43,39 @@ namespace NGuava.Base
             return -1;
         }
 
-        public virtual int indexIn(string sequence, int start) {
+        public virtual int indexIn(string sequence, int start)
+        {
             int length = sequence.Length;
             Preconditions.CheckPositionIndex(start, length);
-            for (int i = start; i < length; i++) {
-                if (matches(sequence[i])) {
+            for (int i = start; i < length; i++)
+            {
+                if (matches(sequence[i]))
+                {
                     return i;
                 }
             }
             return -1;
         }
-        
+
         public virtual CharMatcher precomputed()
         {
             //return Platform.precomputeCharMatcher(this);
             return this;
         }
-        
+
         /**
    * Returns a {@code char} matcher that matches only one specified character.
    */
-        public static CharMatcher isChar(char match) {
+        public static CharMatcher isChar(char match)
+        {
             var description = "CharMatcher.is('" + showCharacter(match) + "')";
             //var description = "Aaa";
             return new SingleCharMatcher(match, description);
         }
 
-        private static CharMatcher isEither(
-            char match1,
-            char match2)
+        private static CharMatcher isEither(char match1, char match2)
         {
-            var description = "CharMatcher.anyOf(\"" +
-                                showCharacter(match1) + showCharacter(match2) + "\")";
-            return new EitherCharMatcher(match1, match2, description);
+            return new EitherCharMatcher(match1, match2);
         }
 
         /**
@@ -86,24 +87,15 @@ namespace NGuava.Base
             switch (sequence.Length)
             {
                 case 0:
-                    return CharMatcher.NONE;
+                    return None;
                 case 1:
                     return isChar(sequence[0]);
                 case 2:
                     return isEither(sequence[0], sequence[1]);
-                // continue below to handle the general case
+                default:
+                    // TODO(user): is it potentially worth just going ahead and building a precomputed matcher?
+                    return new AnyOfMatcher(sequence);
             }
-            // TODO(user): is it potentially worth just going ahead and building a precomputed matcher?
-            char[] chars = sequence.ToCharArray();
-            Array.Sort(chars);
-           
-            StringBuilder description = new StringBuilder("CharMatcher.anyOf(\"");
-            foreach (char c in chars)
-            {
-                description.Append(showCharacter(c));
-            }
-            description.Append("\")");
-            return new AnyOfMatcher(chars, description.ToString());
         }
 
 
@@ -119,9 +111,8 @@ namespace NGuava.Base
             return new string(tmp);
         }
 
-        
 
-        class SingleCharMatcher : FastMatcher
+        class SingleCharMatcher : NamedFastMatcher
         {
             private readonly char match;
 
@@ -141,8 +132,7 @@ namespace NGuava.Base
             private readonly char match1;
             private readonly char match2;
 
-            internal EitherCharMatcher(char match1,
-                char match2, string description) : base(description)
+            internal EitherCharMatcher(char match1, char match2)
             {
                 this.match1 = match1;
                 this.match2 = match2;
@@ -152,27 +142,70 @@ namespace NGuava.Base
             {
                 return c == match1 || c == match2;
             }
+
+            public override string ToString()
+            {
+                return "CharMatcher.anyOf(\"" + showCharacter(match1) + showCharacter(match2) + "\")";
+            }
         }
 
         class AnyOfMatcher : CharMatcher
         {
             private readonly char[] chars;
 
-            internal AnyOfMatcher(char[] chars, string description) : base(description)
+            internal AnyOfMatcher(string chars)
             {
-                this.chars = chars;
+                this.chars = chars.ToCharArray();
+                Array.Sort(this.chars);
             }
 
             public override bool matches(char c)
             {
                 return Array.BinarySearch(chars, c) >= 0;
             }
+
+          
+            public override string ToString()
+            {
+                StringBuilder description = new StringBuilder("CharMatcher.anyOf(\"");
+                foreach (char c in chars)
+                {
+                    description.Append(showCharacter(c));
+                }
+                description.Append("\")");
+                return description.ToString();
+            }
         }
 
-        public static readonly CharMatcher NONE = new NoneMatcher();
+        class Or : CharMatcher
+        {
+            private readonly CharMatcher first;
+            private readonly CharMatcher second;
+
+            Or(CharMatcher a, CharMatcher b)
+            {
+                first = Preconditions.CheckNotNull(a);
+                second = Preconditions.CheckNotNull(b);
+            }
+
+            public override bool matches(char c)
+            {
+                return first.matches(c) || second.matches(c);
+            }
+
+            public override string ToString()
+            {
+                return "CharMatcher.or(" + first + ", " + second + ")";
+            }
+        }
+
+       
 
         class NoneMatcher : FastMatcher
         {
+
+            public static readonly CharMatcher INSTANCE = new NoneMatcher();
+
             public override bool matches(char c)
             {
                 return false;
@@ -189,60 +222,68 @@ namespace NGuava.Base
             }
         }
 
+        /** A matcher for which precomputation will not yield any significant benefit. */
         abstract class FastMatcher : CharMatcher
         {
-            protected FastMatcher()
-            {
-            }
-
-            protected FastMatcher(string description) : base(description)
-            {
-            }
-
-
             public sealed override CharMatcher precomputed()
             {
                 return this;
             }
         }
 
-        public static readonly CharMatcher Whitespace = new WhiteSpaceMatcher();
-
-        /**
-   * Determines whether a character is whitespace according to the latest Unicode standard, as
-   * illustrated
-   * <a href="http://unicode.org/cldr/utility/list-unicodeset.jsp?a=%5Cp%7Bwhitespace%7D">here</a>.
-   * This is not the same definition used by other Java APIs. (See a
-   * <a href="http://spreadsheets.google.com/pub?key=pd8dAQyHbdewRsnE5x5GzKQ">comparison of several
-   * definitions of "whitespace"</a>.)
-   *
-   * <p><b>Note:</b> as the Unicode definition evolves, we will modify this constant to keep it up
-   * to date.
-   */
-
-         class WhiteSpaceMatcher : FastMatcher
+        /** {@link FastMatcher} which overrides {@code toString()} with a custom name. */
+        abstract class NamedFastMatcher : FastMatcher
         {
+            private readonly string description;
 
-            private static readonly String TABLE = "\u0009\u3000\n\u0009\u0009\u0009\u202F\u0009"
-            + "\u0009\u2001\u2006\u0009\u0009\u0009\u0009\u0009"
-            + "\u180E\u0009\u2029\u0009\u0009\u0009\u2000\u2005"
-            + "\u200A\u0009\u0009\u0009\r\u0009\u0009\u2028"
-            + "\u1680\u0009\u00A0\u0009\u2004\u2009\u0009\u0009"
-            + "\u0009\u000C\u205F\u0009\u0009\u0020\u0009\u0009"
-            + "\u2003\u2008\u0009\u0009\u0009\u000B\u0085\u0009"
-            + "\u0009\u0009\u0009\u0009\u0009\u2002\u2007\u0009";
+            protected NamedFastMatcher(string description)
+            {
+                this.description = Preconditions.CheckNotNull(description);
+            }
 
-            internal WhiteSpaceMatcher() : base("WHITESPACE")
+            public override string ToString()
+            {
+                return description;
+            }
+        }
+
+
+/**
+* Determines whether a character is whitespace according to the latest Unicode standard, as
+* illustrated
+* <a href="http://unicode.org/cldr/utility/list-unicodeset.jsp?a=%5Cp%7Bwhitespace%7D">here</a>.
+* This is not the same definition used by other Java APIs. (See a
+* <a href="http://spreadsheets.google.com/pub?key=pd8dAQyHbdewRsnE5x5GzKQ">comparison of several
+* definitions of "whitespace"</a>.)
+*
+* <p><b>Note:</b> as the Unicode definition evolves, we will modify this constant to keep it up
+* to date.
+*/
+
+       
+        class WhitespaceMatcher : NamedFastMatcher
+        {
+            private static readonly string TABLE =
+                "\u2002\u3000\r\u0085\u200A\u2005\u2000\u3000"
+                + "\u2029\u000B\u3000\u2008\u2003\u205F\u3000\u1680"
+                + "\u0009\u0020\u2006\u2001\u202F\u00A0\u000C\u2009"
+                + "\u3000\u2004\u3000\u3000\u2028\n\u2007\u3000";
+
+            private static readonly int MULTIPLIER = 1682554634;
+            private static readonly int SHIFT = (TABLE.Length - 1).NumberOfLeadingZeros();
+
+            internal static readonly WhitespaceMatcher INSTANCE = new WhitespaceMatcher();
+
+            private WhitespaceMatcher() : base("CharMatcher.whitespace()")
             {
             }
 
             public override bool matches(char c)
             {
-                //return TABLE.charAt((-844444961 * c) >>> 26) == c;
-                return TABLE[(int)((uint)(-844444961 * c) >> 26)] == c;
+                //return TABLE.charAt((MULTIPLIER * c) >>> SHIFT) == c;
+                return TABLE[(int) ((uint) (MULTIPLIER * c) >> SHIFT)] == c;
             }
         }
-
     }
 
 

@@ -51,9 +51,6 @@ namespace NGuava.Tests.Base
         {
             var letters = Splitter.On(',').split("a,b,c");
             letters.ToString().Should().Be("[a, b, c]");
-            var e = letters.GetEnumerator();
-            e.MoveNext();
-            var f = e.Current;
             letters.Should().BeEquivalentTo(new List<string> { "a", "b", "c" },
                 options => options.WithStrictOrdering());
         }

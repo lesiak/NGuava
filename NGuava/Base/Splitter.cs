@@ -118,7 +118,7 @@ namespace NGuava.Base
                 }
 
                 internal override int separatorStart(int start) {
-                    return separatorMatcher.indexIn(toSplit, start);
+                    return separatorMatcher.IndexIn(toSplit, start);
                 }
 
                 internal override int separatorEnd(int separatorPosition) {

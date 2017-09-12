@@ -1,13 +1,16 @@
 ﻿using System;
 using System.Runtime.InteropServices;
 using System.Text;
+using static NGuava.Base.Preconditions;
 
 namespace NGuava.Base
 {
     public abstract class CharMatcher
     {
         #region Constant matcher properties
-        
+
+        public static CharMatcher Any => AnyMatcher.INSTANCE;
+
         /// <summary>
         /// Matches no characters.
         /// </summary>
@@ -61,26 +64,36 @@ namespace NGuava.Base
             }
         }
 
-
         #endregion
 
         #region Abstract methods
+
         public abstract bool matches(char c);
+
         #endregion
 
         #region Non-static factories
 
+        /// <summary>
+        /// Returns a matcher that matches any character matched by both this matcher and <c>other</c>.
+        /// </summary>
+        public virtual CharMatcher And(CharMatcher other)
+        {
+            return new AndMatcher(this, other);
+        }
 
         /// <summary>
         /// Returns a matcher that matches any character matched by either this matcher or <c>other</c>.
         /// </summary>
-        public CharMatcher or(CharMatcher other)
+        public virtual CharMatcher Or(CharMatcher other)
         {
-            return new Or(this, other);
+            return new OrMatcher(this, other);
         }
+
         #endregion
 
         #region Text processing routines
+
         public virtual int indexIn(string sequence)
         {
             int length = sequence.Length;
@@ -97,7 +110,7 @@ namespace NGuava.Base
         public virtual int indexIn(string sequence, int start)
         {
             int length = sequence.Length;
-            Preconditions.CheckPositionIndex(start, length);
+            CheckPositionIndex(start, length);
             for (int i = start; i < length; i++)
             {
                 if (matches(sequence[i]))
@@ -122,7 +135,6 @@ namespace NGuava.Base
             return new EitherCharMatcher(match1, match2);
         }
 
-   
 
         private static String showCharacter(char c)
         {
@@ -137,6 +149,7 @@ namespace NGuava.Base
         }
 
         #region Fast matchers
+
         /** A matcher for which precomputation will not yield any significant benefit. */
         abstract class FastMatcher : CharMatcher
         {
@@ -155,13 +168,81 @@ namespace NGuava.Base
 
             protected NamedFastMatcher(string description)
             {
-                this.description = Preconditions.CheckNotNull(description);
+                this.description = CheckNotNull(description);
             }
 
             public override string ToString()
             {
                 return description;
             }
+        }
+
+        private sealed class AnyMatcher : NamedFastMatcher
+        {
+            internal static readonly AnyMatcher INSTANCE = new AnyMatcher();
+
+            private AnyMatcher() : base("CharMatcher.any()")
+            {
+            }
+
+
+            public override bool matches(char c)
+            {
+                return true;
+            }
+
+
+            public override int indexIn(string sequence)
+            {
+                return (sequence.Length == 0) ? -1 : 0;
+            }
+
+
+            public override int indexIn(string sequence, int start)
+            {
+                int length = sequence.Length;
+                CheckPositionIndex(start, length);
+                return (start == length) ? -1 : start;
+            }
+
+
+            public /*override*/ int lastIndexIn(string sequence)
+            {
+                return sequence.Length - 1;
+            }
+
+
+            public /*override*/ bool matchesAllOf(string sequence)
+            {
+                CheckNotNull(sequence);
+                return true;
+            }
+
+            public /*override*/ bool matchesNoneOf(string sequence)
+            {
+                return sequence.Length == 0;
+            }
+
+
+            public override CharMatcher And(CharMatcher other)
+            {
+                return CheckNotNull(other);
+            }
+
+
+            public override CharMatcher Or(CharMatcher other)
+            {
+                CheckNotNull(other);
+                return this;
+            }
+
+            /*
+        @Override
+    public CharMatcher negate()
+        {
+            return none();
+        }
+        */
         }
 
         class SingleCharMatcher : NamedFastMatcher
@@ -200,9 +281,11 @@ namespace NGuava.Base
                 return "CharMatcher.anyOf(\"" + showCharacter(match1) + showCharacter(match2) + "\")";
             }
         }
+
         #endregion
 
         #region Static constant implementation classes
+
         class AnyOfMatcher : CharMatcher
         {
             private readonly char[] chars;
@@ -218,7 +301,7 @@ namespace NGuava.Base
                 return Array.BinarySearch(chars, c) >= 0;
             }
 
-          
+
             public override string ToString()
             {
                 StringBuilder description = new StringBuilder("CharMatcher.anyOf(\"");
@@ -231,15 +314,43 @@ namespace NGuava.Base
             }
         }
 
-        class Or : CharMatcher
+        /// <summary>
+        /// Implementation of <see cref="CharMatcher.And(CharMatcher)"/>.
+        /// </summary>
+        private sealed class AndMatcher : CharMatcher
         {
             private readonly CharMatcher first;
             private readonly CharMatcher second;
 
-            internal Or(CharMatcher a, CharMatcher b)
+            internal AndMatcher(CharMatcher a, CharMatcher b)
             {
-                first = Preconditions.CheckNotNull(a);
-                second = Preconditions.CheckNotNull(b);
+                first = CheckNotNull(a);
+                second = CheckNotNull(b);
+            }
+
+            public override bool matches(char c)
+            {
+                return first.matches(c) && second.matches(c);
+            }
+
+            public override string ToString()
+            {
+                return "CharMatcher.and(" + first + ", " + second + ")";
+            }
+        }
+
+        /// <summary>
+        /// Implementation of <see cref="CharMatcher.Or(CharMatcher)"/>.
+        /// </summary>
+        private sealed class OrMatcher : CharMatcher
+        {
+            private readonly CharMatcher first;
+            private readonly CharMatcher second;
+
+            internal OrMatcher(CharMatcher a, CharMatcher b)
+            {
+                first = CheckNotNull(a);
+                second = CheckNotNull(b);
             }
 
             public override bool matches(char c)
@@ -252,13 +363,11 @@ namespace NGuava.Base
                 return "CharMatcher.or(" + first + ", " + second + ")";
             }
         }
-       
 
 
         class NoneMatcher : FastMatcher
         {
-
-            public static readonly CharMatcher INSTANCE = new NoneMatcher();
+            internal static readonly CharMatcher INSTANCE = new NoneMatcher();
 
             public override bool matches(char c)
             {
@@ -275,7 +384,7 @@ namespace NGuava.Base
                 return -1;
             }
         }
-  
+
         /// <summary>
         /// Implementation of <see cref="CharMatcher.Whitespace()"/>
         /// </summary>
@@ -302,8 +411,7 @@ namespace NGuava.Base
                 return TABLE[(int) ((uint) (MULTIPLIER * c) >> SHIFT)] == c;
             }
         }
+
         #endregion
     }
-
-
 }

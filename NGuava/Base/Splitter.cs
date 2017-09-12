@@ -55,7 +55,21 @@ namespace NGuava.Base
         {
             Preconditions.CheckNotNull(separatorMatcher);
 
-            return new Splitter(new CharMatcherSplitterStrategy(separatorMatcher));
+            return new Splitter(new ByCharMatcherSplitterStrategy(separatorMatcher));
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="separator"></param>
+        /// <returns></returns>
+        public static Splitter On(string separator)
+        {
+            if (separator.Length == 1)
+            {
+                return On(separator[0]);
+            }
+            return new Splitter(new ByStringSplitterStrategy(separator));
         }
 
         public Splitter OmitEmptyStrings()
@@ -94,25 +108,25 @@ namespace NGuava.Base
         }
 
 
-        private class CharMatcherSplitterStrategy : ISplittingStrategy
+        private class ByCharMatcherSplitterStrategy : ISplittingStrategy
         {
             private readonly CharMatcher separatorMatcher;
 
-            public CharMatcherSplitterStrategy(CharMatcher separatorMatcher)
+            public ByCharMatcherSplitterStrategy(CharMatcher separatorMatcher)
             {
                 this.separatorMatcher = separatorMatcher;
             }
 
             public IEnumerable<string> MakeEnumerable(Splitter splitter, string toSplit)
             {
-                return new CharMatcherSplittingEnumerable(splitter, toSplit, separatorMatcher);
+                return new ByCharMatcherSplittingEnumerable(splitter, toSplit, separatorMatcher);
             }
 
-            private class CharMatcherSplittingEnumerable : SplittingEnumerable
+            private class ByCharMatcherSplittingEnumerable : SplittingEnumerable
             {
                 private readonly CharMatcher separatorMatcher;
 
-                public CharMatcherSplittingEnumerable(Splitter splitter,
+                public ByCharMatcherSplittingEnumerable(Splitter splitter,
                     string toSplit,
                     CharMatcher separatorMatcher) : base(splitter, toSplit)
                 {
@@ -127,6 +141,62 @@ namespace NGuava.Base
                 internal override int SeparatorEnd(int separatorPosition)
                 {
                     return separatorPosition + 1;
+                }
+            }
+        }
+
+        private class ByStringSplitterStrategy : ISplittingStrategy
+        {
+            private readonly string separator;
+
+            public ByStringSplitterStrategy(string separator)
+            {
+                this.separator = separator;
+            }
+
+            public IEnumerable<string> MakeEnumerable(Splitter splitter, string toSplit)
+            {
+                return new ByStringSplittingEnumerable(splitter, toSplit, separator);
+            }
+
+            private class ByStringSplittingEnumerable : SplittingEnumerable
+            {
+                private readonly string separator;
+
+                public ByStringSplittingEnumerable(Splitter splitter,
+                    string toSplit,
+                    string separator) : base(splitter, toSplit)
+                {
+                    this.separator = separator;
+                }
+
+                internal override int SeparatorStart(int start)
+                {
+                    var separatorLength = separator.Length;
+
+                    for (int p = start, last = ToSplit.Length - separatorLength; p <= last; p++)
+                    {
+                        var advanceFirstSeparatorNotMatched = false;
+                        for (var i = 0; i < separatorLength; i++)
+                        {
+                            if (ToSplit[i+p] != separator[i])
+                            {
+                                advanceFirstSeparatorNotMatched = true;
+                                break;
+                            }
+                        }
+                        if (advanceFirstSeparatorNotMatched)
+                        {
+                            continue;
+                        }
+                        return p;
+                    }
+                    return -1;
+                }
+
+                internal override int SeparatorEnd(int separatorPosition)
+                {
+                    return separatorPosition + separator.Length;
                 }
             }
         }

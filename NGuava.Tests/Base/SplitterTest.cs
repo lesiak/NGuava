@@ -37,13 +37,11 @@ namespace NGuava.Tests.Base
         }
 
         [TestMethod]
-        [Ignore]
         public void TestToString()
         {
             Splitter.On(',').split("").ToString().Should().Be("[]");
             Splitter.On(',').split("a,b,c").ToString().Should().Be("[a, b, c]");
-           // Splitter.On(", ").split("yam, bam, jam, ham").ToString().Should().Be("[yam, bam, jam, ham]");
-           //
+            Splitter.On(", ").split("yam, bam, jam, ham").ToString().Should().Be("[yam, bam, jam, ham]"); 
         }
 
         [TestMethod]

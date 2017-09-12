@@ -172,17 +172,25 @@ namespace NGuava.Tests.Base
         }
 
         [TestMethod]
-        [Ignore]
         public void TestCharacterSplitWithTrim()
         {
             const string jacksons = "arfo(Marlon)aorf, (Michael)orfa, afro(Jackie)orfa, "
-                              + "ofar(Jemaine), aff(Tito)";
-           // var family = COMMA_SPLITTER
-           //     .TrimResults(CharMatcher.anyOf("afro").or(CharMatcher.whitespace()))
-           //     .split(jacksons);
-          //  assertThat(family)
-          //      .containsExactly("(Marlon)", "(Michael)", "(Jackie)", "(Jemaine)", "(Tito)")
-           //     .inOrder();
+                                    + "ofar(Jemaine), aff(Tito)";
+            var family = COMMA_SPLITTER
+                .TrimResults(CharMatcher.anyOf("afro").Or(CharMatcher.Whitespace))
+                .split(jacksons);
+            family.Should().BeEquivalentTo(new List<string>
+                {
+                    "(Marlon)",
+                    "(Michael)",
+                    "(Jackie)",
+                    "(Jemaine)",
+                    "(Tito)"
+                },
+                options => options.WithStrictOrdering());
+            //  assertThat(family)
+            //      .containsExactly("(Marlon)", "(Michael)", "(Jackie)", "(Jemaine)", "(Tito)")
+            //     .inOrder();
         }
 
         [TestMethod]

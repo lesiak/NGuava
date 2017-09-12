@@ -38,11 +38,24 @@ namespace NGuava.Tests.Base
 
         [TestMethod]
         [Ignore]
-        public void testToString()
+        public void TestToString()
         {
-            //assertEquals("[]", Splitter.on(',').split("").toString());
-            //assertEquals("[a, b, c]", Splitter.on(',').split("a,b,c").toString());
-            //assertEquals("[yam, bam, jam, ham]", Splitter.on(", ").split("yam, bam, jam, ham").toString());
+            Splitter.On(',').split("").ToString().Should().Be("[]");
+            Splitter.On(',').split("a,b,c").ToString().Should().Be("[a, b, c]");
+           // Splitter.On(", ").split("yam, bam, jam, ham").ToString().Should().Be("[yam, bam, jam, ham]");
+           //
+        }
+
+        [TestMethod]
+        public void TestSplitterIsUsableAfterToString()
+        {
+            var letters = Splitter.On(',').split("a,b,c");
+            letters.ToString().Should().Be("[a, b, c]");
+            var e = letters.GetEnumerator();
+            e.MoveNext();
+            var f = e.Current;
+            letters.Should().BeEquivalentTo(new List<string> { "a", "b", "c" },
+                options => options.WithStrictOrdering());
         }
 
         [TestMethod]
@@ -101,15 +114,14 @@ namespace NGuava.Tests.Base
         }
 
         [TestMethod]
-        [Ignore]
         public void TestCharacterSplitWithMatcherDelimiter()
         {
-            //var testCharacteringMotto = Splitter
-            //    .On(CharMatcher.whitespace())
-            //    .split("Testing\nrocks\tDebugging sucks");
-            //assertThat(testCharacteringMotto)
-            //    .containsExactly("Testing", "rocks", "Debugging", "sucks")
-            //    .inOrder();
+            var testCharacteringMotto = Splitter
+                .On(CharMatcher.Whitespace)
+                .split("Testing\nrocks\tDebugging sucks");
+            testCharacteringMotto.Should()
+                .BeEquivalentTo(new List<string> { "Testing", "rocks", "Debugging", "sucks" },
+                    options => options.WithStrictOrdering());
         }
 
         [TestMethod]
@@ -188,9 +200,6 @@ namespace NGuava.Tests.Base
                     "(Tito)"
                 },
                 options => options.WithStrictOrdering());
-            //  assertThat(family)
-            //      .containsExactly("(Marlon)", "(Michael)", "(Jackie)", "(Jemaine)", "(Tito)")
-            //     .inOrder();
         }
 
         [TestMethod]

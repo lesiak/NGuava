@@ -26,6 +26,10 @@ namespace NGuava.Base
             this.separator = CheckNotNull(separator);
         }
 
+        public virtual StringBuilder AppendTo<T>(StringBuilder stringBuilder, IEnumerable<T> parts)
+        {
+            return AppendTo(stringBuilder, parts.GetEnumerator());
+        }
 
         public virtual StringBuilder AppendTo<T>(StringBuilder stringBuilder, IEnumerator<T> parts)
         {

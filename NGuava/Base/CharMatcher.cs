@@ -32,10 +32,8 @@ namespace NGuava.Base
         #region Static factories
 
         /// <summary>
-        /// Returns a {@code char} matcher that matches only one specified character.
+        /// Returns a <c>char</c> matcher that matches only one specified character.
         /// </summary>
-        /// <param name="match"></param>
-        /// <returns></returns>
         public static CharMatcher isChar(char match)
         {
             var description = "CharMatcher.is('" + showCharacter(match) + "')";
@@ -44,11 +42,9 @@ namespace NGuava.Base
         }
 
         /// <summary>
-        /// Returns a {@code char} matcher that matches any character present in the given character
+        /// Returns a <c>char</c> matcher that matches any character present in the given character
         /// sequence.
         /// </summary>
-        /// <param name="sequence"></param>
-        /// <returns></returns>
         public static CharMatcher anyOf(string sequence)
         {
             switch (sequence.Length)
@@ -76,7 +72,7 @@ namespace NGuava.Base
 
 
         /// <summary>
-        /// Returns a matcher that matches any character matched by either this matcher or {@code other}.
+        /// Returns a matcher that matches any character matched by either this matcher or <c>other</c>.
         /// </summary>
         public CharMatcher or(CharMatcher other)
         {
@@ -150,7 +146,9 @@ namespace NGuava.Base
             }
         }
 
-        /** {@link FastMatcher} which overrides {@code toString()} with a custom name. */
+        /// <summary>
+        /// <see cref="CharMatcher.FastMatcher" /> which overrides <c>ToString()</c> with a custom name.
+        /// </summary>
         abstract class NamedFastMatcher : FastMatcher
         {
             private readonly string description;
@@ -277,24 +275,11 @@ namespace NGuava.Base
                 return -1;
             }
         }
-
-        
-
-
-/**
-* Determines whether a character is whitespace according to the latest Unicode standard, as
-* illustrated
-* <a href="http://unicode.org/cldr/utility/list-unicodeset.jsp?a=%5Cp%7Bwhitespace%7D">here</a>.
-* This is not the same definition used by other Java APIs. (See a
-* <a href="http://spreadsheets.google.com/pub?key=pd8dAQyHbdewRsnE5x5GzKQ">comparison of several
-* definitions of "whitespace"</a>.)
-*
-* <p><b>Note:</b> as the Unicode definition evolves, we will modify this constant to keep it up
-* to date.
-*/
-
-       
-        class WhitespaceMatcher : NamedFastMatcher
+  
+        /// <summary>
+        /// Implementation of <see cref="CharMatcher.Whitespace()"/>
+        /// </summary>
+        private class WhitespaceMatcher : NamedFastMatcher
         {
             private static readonly string TABLE =
                 "\u2002\u3000\r\u0085\u200A\u2005\u2000\u3000"

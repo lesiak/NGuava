@@ -59,12 +59,15 @@ namespace NGuava.Base
         }
 
         /// <summary>
-        /// 
+        /// Returns a splitter that uses the given fixed string as a separator. For example,
+        /// <c>Splitter.on(", ").split("foo, bar,baz")</c>
+        /// returns an iterable containing <c>["foo", "bar,baz"]</c>.
         /// </summary>
-        /// <param name="separator"></param>
-        /// <returns></returns>
+        /// <param name="separator">the literal, nonempty string to recognize as a separator</param>
+        /// <returns>a splitter, with default settings, that recognizes that separator</returns>
         public static Splitter On(string separator)
         {
+            Preconditions.CheckArgument(separator.Length != 0, "The separator may not be the empty string.");
             if (separator.Length == 1)
             {
                 return On(separator[0]);

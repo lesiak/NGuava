@@ -284,5 +284,52 @@ namespace NGuava.Tests.Base
                 options => options.WithStrictOrdering());
         }
 
+        [TestMethod]
+        public void TestStringSplitEmptyTokenOmitEmptyStrings()
+        {
+            const string emptyToken = "a. .c";
+            var letters = Splitter.On(".")
+                .OmitEmptyStrings().TrimResults().split(emptyToken);
+            letters.Should().BeEquivalentTo(new List<string> { "a", "c" },
+                options => options.WithStrictOrdering());
+        }
+
+        [TestMethod]
+        public void TestStringSplitWithLongDelimiter()
+        {
+            const string longDelimiter = "a, b, c";
+            var letters = Splitter.On(", ").split(longDelimiter);
+            letters.Should().BeEquivalentTo(new List<string> { "a", "b", "c" },
+                options => options.WithStrictOrdering());
+        }
+
+        [TestMethod]
+        public void TestStringSplitWithLongLeadingDelimiter()
+        {
+            const string longDelimiter = ", a, b, c";
+            var letters = Splitter.On(", ").split(longDelimiter);
+            letters.Should().BeEquivalentTo(new List<string> { "", "a", "b", "c" },
+                options => options.WithStrictOrdering());
+        }
+
+        [TestMethod]
+        public void TestStringSplitWithLongTrailingDelimiter()
+        {
+            const string longDelimiter = "a, b, c, ";
+            var letters = Splitter.On(", ").split(longDelimiter);
+            letters.Should().BeEquivalentTo(new List<string> { "a", "b", "c", "" },
+                options => options.WithStrictOrdering());
+        }
+
+        [TestMethod]
+        public void TestStringSplitWithDelimiterSubstringInValue()
+        {
+            const string fourCommasAndFourSpaces = ",,,,    ";
+            var threeCommasThenThreeSpaces = Splitter.On(", ").split(
+                fourCommasAndFourSpaces);
+            threeCommasThenThreeSpaces.Should().BeEquivalentTo(new List<string> { ",,,", "   " },
+                options => options.WithStrictOrdering());
+        }
+
     }
 }

@@ -39,8 +39,8 @@ namespace NGuava.Tests.Base
         [TestMethod]
         public void TestToString()
         {
-            Splitter.On(',').split("").ToString().Should().Be("[]");
-            Splitter.On(',').split("a,b,c").ToString().Should().Be("[a, b, c]");
+            COMMA_SPLITTER.split("").ToString().Should().Be("[]");
+            COMMA_SPLITTER.split("a,b,c").ToString().Should().Be("[a, b, c]");
             Splitter.On(", ").split("yam, bam, jam, ham").ToString().Should().Be("[yam, bam, jam, ham]"); 
         }
 
@@ -99,13 +99,14 @@ namespace NGuava.Tests.Base
         }
 
         [TestMethod]
-        public void TestCharacterSplitWithMulitpleLetters()
+        public void testCharacterSplitWithMultitpleLetters()
         {
             var testCharacteringMotto = Splitter.On('-').split(
                 "Testing-rocks-Debugging-sucks");
-            testCharacteringMotto.Should()
-                .BeEquivalentTo(new List<string> { "Testing", "rocks", "Debugging", "sucks" },
-                    options => options.WithStrictOrdering());
+            testCharacteringMotto.Should().BeEquivalentTo(new List<string>
+                {
+                    "Testing", "rocks", "Debugging", "sucks"
+                }, options => options.WithStrictOrdering());
         }
 
         [TestMethod]
@@ -201,7 +202,7 @@ namespace NGuava.Tests.Base
         public void TestStringSimpleSplit()
         {
             const string simple = "a,b,c";
-            var letters = Splitter.On(',').split(simple);
+            var letters = Splitter.On(",").split(simple);
             letters.Should().BeEquivalentTo(new List<string> { "a", "b", "c" },
                 options => options.WithStrictOrdering());
         }
@@ -210,7 +211,7 @@ namespace NGuava.Tests.Base
         public void TestStringSimpleSplitWithNoDelimiter()
         {
             const string simple = "a,b,c";
-            var letters = Splitter.On('.').split(simple);
+            var letters = Splitter.On(".").split(simple);
             letters.Should().BeEquivalentTo(new List<string> { "a,b,c" },
                 options => options.WithStrictOrdering());
         }
@@ -219,10 +220,68 @@ namespace NGuava.Tests.Base
         public void TestStringSplitWithDoubleDelimiter()
         {
             const string doubled = "a,,b,c";
-            var letters = Splitter.On(',').split(doubled);
+            var letters = Splitter.On(",").split(doubled);
             letters.Should().BeEquivalentTo(new List<string> { "a", "", "b", "c" },
+                options => options.WithStrictOrdering()); 
+        }
+
+        [TestMethod]
+        public void TestStringSplitWithDoubleDelimiterAndSpace()
+        {
+            const string doubled = "a,, b,c";
+            var letters = Splitter.On(",").split(doubled);
+            letters.Should().BeEquivalentTo(new List<string> { "a", "", " b", "c" },
                 options => options.WithStrictOrdering());
-           
+        }
+
+        [TestMethod]
+        public void TestStringSplitWithTrailingDelimiter()
+        {
+            const string trailing = "a,b,c,";
+            var letters = Splitter.On(",").split(trailing);
+            letters.Should().BeEquivalentTo(new List<string> { "a", "b", "c", "" },
+                options => options.WithStrictOrdering());
+        }
+
+        [TestMethod]
+        public void TestStringSplitWithLeadingDelimiter()
+        {
+            const string leading = ",a,b,c";
+            var letters = Splitter.On(",").split(leading);
+            letters.Should().BeEquivalentTo(new List<string> { "", "a", "b", "c"},
+                options => options.WithStrictOrdering());
+        }
+
+        [TestMethod]
+        public void TestStringSplitWithMultipleLetters()
+        {
+            var testStringingMotto = Splitter.On("-").split(
+                "Testing-rocks-Debugging-sucks");
+            testStringingMotto.Should().BeEquivalentTo(new List<string>
+            {
+                "Testing", "rocks", "Debugging", "sucks"
+            }, options => options.WithStrictOrdering());
+        }
+
+
+        [TestMethod]
+        public void TestStringSplitWithDoubleDelimiterOmitEmptyStrings()
+        {
+            const string doubled = "a..b.c";
+            var letters = Splitter.On(".")
+                .OmitEmptyStrings().split(doubled);
+            letters.Should().BeEquivalentTo(new List<string> { "a", "b", "c" },
+                options => options.WithStrictOrdering());
+        }
+
+        [TestMethod]
+        public void TestStringSplitEmptyToken()
+        {
+            const string emptyToken = "a. .c";
+            var letters = Splitter.On(".").TrimResults()
+                .split(emptyToken);
+            letters.Should().BeEquivalentTo(new List<string> { "a", "", "c" },
+                options => options.WithStrictOrdering());
         }
 
     }

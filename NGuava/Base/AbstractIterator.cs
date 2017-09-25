@@ -13,7 +13,6 @@ namespace NGuava.Base
             /** We haven't yet computed any element. */
             NOT_READY,
 
-
             /** We have reached the end of the data and are finished. */
             DONE,
 

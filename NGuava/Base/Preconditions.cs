@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Text;
+using JetBrains.Annotations;
 
 namespace NGuava.Base
 {
@@ -11,15 +12,15 @@ namespace NGuava.Base
                 throw new ArgumentException("Invalid argument.", "expression");
         }
 
-        public static void CheckArgument(bool expression, [Nullable] object errorMessage)
+        public static void CheckArgument(bool expression, [CanBeNull] object errorMessage)
         {
             if (!expression)
                 throw new ArgumentException(StringHelper.ValueOf(errorMessage), "expression");
         }
 
         public static void CheckArgument(bool expression,
-            [Nullable] string errorMessageTemplate,
-            [Nullable] params object[] errorMessageArgs)
+            [CanBeNull] string errorMessageTemplate,
+            [CanBeNull] params object[] errorMessageArgs)
         {
             if (!expression)
                 throw new ArgumentException(Format(errorMessageTemplate, errorMessageArgs), "expression");
@@ -40,7 +41,7 @@ namespace NGuava.Base
             return reference;
         }
 
-        public static T CheckNotNull<T>(T reference, [Nullable] object errorMessage) where T : class
+        public static T CheckNotNull<T>(T reference, [CanBeNull] object errorMessage) where T : class
         {
             if (reference == null)
                 throw new NullReferenceException(StringHelper.ValueOf(errorMessage));
@@ -49,8 +50,8 @@ namespace NGuava.Base
         }
 
         public static T CheckNotNull<T>(T reference,
-            [Nullable] string errorMessageTemplate,
-            [Nullable] params object[] errorMessageArgs) where T : class
+            [CanBeNull] string errorMessageTemplate,
+            [CanBeNull] params object[] errorMessageArgs) where T : class
         {
             if (reference == null)
                 throw new NullReferenceException(Format(errorMessageTemplate, errorMessageArgs));
@@ -63,7 +64,7 @@ namespace NGuava.Base
             return CheckElementIndex(index, size, "index");
         }
 
-        public static int CheckElementIndex(int index, int size, [Nullable] string desc)
+        public static int CheckElementIndex(int index, int size, [CanBeNull] string desc)
         {
             if (index < 0 || index >= size)
                 throw new IndexOutOfRangeException(BadElementIndex(index, size, desc));
@@ -88,7 +89,7 @@ namespace NGuava.Base
             return CheckPositionIndex(index, size, "index");
         }
 
-        public static int CheckPositionIndex(int index, int size, [Nullable] string desc)
+        public static int CheckPositionIndex(int index, int size, [CanBeNull] string desc)
         {
             // Carefully optimized for execution by hotspot (explanatory comment above)
             if (index < 0 || index > size)
@@ -133,7 +134,7 @@ namespace NGuava.Base
 
         [VisibleForTesting]
         internal static string Format(string template,
-            [Nullable] params object[] args)
+            [CanBeNull] params object[] args)
         {
             template = StringHelper.ValueOf(template); // null -> "null"
 

@@ -23,8 +23,7 @@ namespace NGuava.Tests.Base
         {
             const string simple = "a,b,c";
             var letters = COMMA_SPLITTER.split(simple);
-            letters.Should().BeEquivalentTo(new List<string> {"a", "b", "c"},
-                options => options.WithStrictOrdering());
+            letters.Should().ContainExactlyInOrder("a", "b", "c");
         }
 
         [TestMethod]
@@ -32,8 +31,7 @@ namespace NGuava.Tests.Base
         {
             const string simple = "a,b,c";
             var letters = COMMA_SPLITTER.SplitToList(simple);
-            letters.Should().BeEquivalentTo(new List<string> { "a", "b", "c" },
-                options => options.WithStrictOrdering());
+            letters.Should().ContainExactlyInOrder("a", "b", "c");
         }
 
         [TestMethod]
@@ -41,7 +39,7 @@ namespace NGuava.Tests.Base
         {
             COMMA_SPLITTER.split("").ToString().Should().Be("[]");
             COMMA_SPLITTER.split("a,b,c").ToString().Should().Be("[a, b, c]");
-            Splitter.On(", ").split("yam, bam, jam, ham").ToString().Should().Be("[yam, bam, jam, ham]"); 
+            Splitter.On(", ").split("yam, bam, jam, ham").ToString().Should().Be("[yam, bam, jam, ham]");
         }
 
         [TestMethod]
@@ -49,8 +47,7 @@ namespace NGuava.Tests.Base
         {
             var letters = Splitter.On(',').split("a,b,c");
             letters.ToString().Should().Be("[a, b, c]");
-            letters.Should().BeEquivalentTo(new List<string> { "a", "b", "c" },
-                options => options.WithStrictOrdering());
+            letters.Should().ContainExactlyInOrder("a", "b", "c");
         }
 
         [TestMethod]
@@ -58,8 +55,7 @@ namespace NGuava.Tests.Base
         {
             const string simple = "a,b,c";
             var letters = Splitter.On('.').split(simple);
-            letters.Should().BeEquivalentTo(new List<string> { "a,b,c" },
-                options => options.WithStrictOrdering());
+            letters.Should().ContainExactlyInOrder("a,b,c");
         }
 
         [TestMethod]
@@ -67,8 +63,7 @@ namespace NGuava.Tests.Base
         {
             const string doubled = "a,,b,c";
             var letters = COMMA_SPLITTER.split(doubled);
-            letters.Should().BeEquivalentTo(new List<string> { "a", "", "b", "c" },
-                options => options.WithStrictOrdering());
+            letters.Should().ContainExactlyInOrder("a", "", "b", "c");
         }
 
         [TestMethod]
@@ -76,8 +71,7 @@ namespace NGuava.Tests.Base
         {
             const string doubled = "a,, b,c";
             var letters = COMMA_SPLITTER.split(doubled);
-            letters.Should().BeEquivalentTo(new List<string> { "a", "", " b", "c" },
-                options => options.WithStrictOrdering());
+            letters.Should().ContainExactlyInOrder("a", "", " b", "c");
         }
 
         [TestMethod]
@@ -85,8 +79,7 @@ namespace NGuava.Tests.Base
         {
             const string trailing = "a,b,c,";
             var letters = COMMA_SPLITTER.split(trailing);
-            letters.Should().BeEquivalentTo(new List<string> { "a", "b", "c", "" },
-                options => options.WithStrictOrdering());
+            letters.Should().ContainExactlyInOrder("a", "b", "c", "");
         }
 
         [TestMethod]
@@ -94,8 +87,7 @@ namespace NGuava.Tests.Base
         {
             const string leading = ",a,b,c";
             var letters = COMMA_SPLITTER.split(leading);
-            letters.Should().BeEquivalentTo(new List<string> { "", "a", "b", "c" },
-                options => options.WithStrictOrdering());
+            letters.Should().ContainExactlyInOrder("", "a", "b", "c");
         }
 
         [TestMethod]
@@ -103,10 +95,7 @@ namespace NGuava.Tests.Base
         {
             var testCharacteringMotto = Splitter.On('-').split(
                 "Testing-rocks-Debugging-sucks");
-            testCharacteringMotto.Should().BeEquivalentTo(new List<string>
-                {
-                    "Testing", "rocks", "Debugging", "sucks"
-                }, options => options.WithStrictOrdering());
+            testCharacteringMotto.Should().ContainExactlyInOrder("Testing", "rocks", "Debugging", "sucks");
         }
 
         [TestMethod]
@@ -116,8 +105,7 @@ namespace NGuava.Tests.Base
                 .On(CharMatcher.Whitespace)
                 .split("Testing\nrocks\tDebugging sucks");
             testCharacteringMotto.Should()
-                .BeEquivalentTo(new List<string> { "Testing", "rocks", "Debugging", "sucks" },
-                    options => options.WithStrictOrdering());
+                .ContainExactlyInOrder("Testing", "rocks", "Debugging", "sucks");
         }
 
         [TestMethod]
@@ -126,8 +114,7 @@ namespace NGuava.Tests.Base
             const string doubled = "a..b.c";
             var letters = Splitter.On('.')
                 .OmitEmptyStrings().split(doubled);
-            letters.Should().BeEquivalentTo(new List<string> { "a", "b", "c" },
-                options => options.WithStrictOrdering());
+            letters.Should().ContainExactlyInOrder("a", "b", "c");
         }
 
         [TestMethod]
@@ -136,8 +123,7 @@ namespace NGuava.Tests.Base
             const string emptyToken = "a. .c";
             var letters = Splitter.On('.').TrimResults()
                 .split(emptyToken);
-            letters.Should().BeEquivalentTo(new List<string> { "a", "", "c" },
-                options => options.WithStrictOrdering());
+            letters.Should().ContainExactlyInOrder("a", "", "c");
         }
 
         [TestMethod]
@@ -146,16 +132,14 @@ namespace NGuava.Tests.Base
             const string emptyToken = "a. .c";
             var letters = Splitter.On('.')
                 .OmitEmptyStrings().TrimResults().split(emptyToken);
-            letters.Should().BeEquivalentTo(new List<string> { "a", "c" },
-                options => options.WithStrictOrdering());
+            letters.Should().ContainExactlyInOrder("a", "c");
         }
 
         [TestMethod]
         public void TestCharacterSplitOnEmptyString()
         {
             var nothing = Splitter.On('.').split("");
-            nothing.Should().BeEquivalentTo(new List<string> { "" },
-                options => options.WithStrictOrdering());
+            nothing.Should().ContainExactlyInOrder("");
         }
 
         [TestMethod]
@@ -167,9 +151,8 @@ namespace NGuava.Tests.Base
         [TestMethod]
         public void TestCharacterSplitOnOnlyDelimiter()
         {
-           var blankblank = Splitter.On('.').split(".");
-            blankblank.Should().BeEquivalentTo(new List<string> { "", "" },
-                options => options.WithStrictOrdering());
+            var blankblank = Splitter.On('.').split(".");
+            blankblank.Should().ContainExactlyInOrder("", "");
         }
 
         [TestMethod]
@@ -187,15 +170,12 @@ namespace NGuava.Tests.Base
             var family = COMMA_SPLITTER
                 .TrimResults(CharMatcher.anyOf("afro").Or(CharMatcher.Whitespace))
                 .split(jacksons);
-            family.Should().BeEquivalentTo(new List<string>
-                {
-                    "(Marlon)",
-                    "(Michael)",
-                    "(Jackie)",
-                    "(Jemaine)",
-                    "(Tito)"
-                },
-                options => options.WithStrictOrdering());
+            family.Should().ContainExactlyInOrder(
+                "(Marlon)",
+                "(Michael)",
+                "(Jackie)",
+                "(Jemaine)",
+                "(Tito)");
         }
 
         [TestMethod]
@@ -203,8 +183,7 @@ namespace NGuava.Tests.Base
         {
             const string simple = "a,b,c";
             var letters = Splitter.On(",").split(simple);
-            letters.Should().BeEquivalentTo(new List<string> { "a", "b", "c" },
-                options => options.WithStrictOrdering());
+            letters.Should().ContainExactlyInOrder("a", "b", "c");
         }
 
         [TestMethod]
@@ -212,8 +191,7 @@ namespace NGuava.Tests.Base
         {
             const string simple = "a,b,c";
             var letters = Splitter.On(".").split(simple);
-            letters.Should().BeEquivalentTo(new List<string> { "a,b,c" },
-                options => options.WithStrictOrdering());
+            letters.Should().ContainExactlyInOrder("a,b,c");
         }
 
         [TestMethod]
@@ -221,8 +199,7 @@ namespace NGuava.Tests.Base
         {
             const string doubled = "a,,b,c";
             var letters = Splitter.On(",").split(doubled);
-            letters.Should().BeEquivalentTo(new List<string> { "a", "", "b", "c" },
-                options => options.WithStrictOrdering()); 
+            letters.Should().ContainExactlyInOrder("a", "", "b", "c");
         }
 
         [TestMethod]
@@ -230,8 +207,7 @@ namespace NGuava.Tests.Base
         {
             const string doubled = "a,, b,c";
             var letters = Splitter.On(",").split(doubled);
-            letters.Should().BeEquivalentTo(new List<string> { "a", "", " b", "c" },
-                options => options.WithStrictOrdering());
+            letters.Should().ContainExactlyInOrder("a", "", " b", "c");
         }
 
         [TestMethod]
@@ -239,8 +215,7 @@ namespace NGuava.Tests.Base
         {
             const string trailing = "a,b,c,";
             var letters = Splitter.On(",").split(trailing);
-            letters.Should().BeEquivalentTo(new List<string> { "a", "b", "c", "" },
-                options => options.WithStrictOrdering());
+            letters.Should().ContainExactlyInOrder("a", "b", "c", "");
         }
 
         [TestMethod]
@@ -248,8 +223,7 @@ namespace NGuava.Tests.Base
         {
             const string leading = ",a,b,c";
             var letters = Splitter.On(",").split(leading);
-            letters.Should().BeEquivalentTo(new List<string> { "", "a", "b", "c"},
-                options => options.WithStrictOrdering());
+            letters.Should().ContainExactlyInOrder("", "a", "b", "c");
         }
 
         [TestMethod]
@@ -257,10 +231,11 @@ namespace NGuava.Tests.Base
         {
             var testStringingMotto = Splitter.On("-").split(
                 "Testing-rocks-Debugging-sucks");
-            testStringingMotto.Should().BeEquivalentTo(new List<string>
-            {
-                "Testing", "rocks", "Debugging", "sucks"
-            }, options => options.WithStrictOrdering());
+            testStringingMotto.Should().ContainExactlyInOrder(
+                "Testing",
+                "rocks",
+                "Debugging",
+                "sucks");
         }
 
 
@@ -270,8 +245,7 @@ namespace NGuava.Tests.Base
             const string doubled = "a..b.c";
             var letters = Splitter.On(".")
                 .OmitEmptyStrings().split(doubled);
-            letters.Should().BeEquivalentTo(new List<string> { "a", "b", "c" },
-                options => options.WithStrictOrdering());
+            letters.Should().ContainExactlyInOrder("a", "b", "c");
         }
 
         [TestMethod]
@@ -280,8 +254,7 @@ namespace NGuava.Tests.Base
             const string emptyToken = "a. .c";
             var letters = Splitter.On(".").TrimResults()
                 .split(emptyToken);
-            letters.Should().BeEquivalentTo(new List<string> { "a", "", "c" },
-                options => options.WithStrictOrdering());
+            letters.Should().ContainExactlyInOrder("a", "", "c");
         }
 
         [TestMethod]
@@ -290,8 +263,7 @@ namespace NGuava.Tests.Base
             const string emptyToken = "a. .c";
             var letters = Splitter.On(".")
                 .OmitEmptyStrings().TrimResults().split(emptyToken);
-            letters.Should().BeEquivalentTo(new List<string> { "a", "c" },
-                options => options.WithStrictOrdering());
+            letters.Should().ContainExactlyInOrder("a", "c");
         }
 
         [TestMethod]
@@ -299,8 +271,7 @@ namespace NGuava.Tests.Base
         {
             const string longDelimiter = "a, b, c";
             var letters = Splitter.On(", ").split(longDelimiter);
-            letters.Should().BeEquivalentTo(new List<string> { "a", "b", "c" },
-                options => options.WithStrictOrdering());
+            letters.Should().ContainExactlyInOrder("a", "b", "c");
         }
 
         [TestMethod]
@@ -308,8 +279,7 @@ namespace NGuava.Tests.Base
         {
             const string longDelimiter = ", a, b, c";
             var letters = Splitter.On(", ").split(longDelimiter);
-            letters.Should().BeEquivalentTo(new List<string> { "", "a", "b", "c" },
-                options => options.WithStrictOrdering());
+            letters.Should().ContainExactlyInOrder("", "a", "b", "c");
         }
 
         [TestMethod]
@@ -317,8 +287,7 @@ namespace NGuava.Tests.Base
         {
             const string longDelimiter = "a, b, c, ";
             var letters = Splitter.On(", ").split(longDelimiter);
-            letters.Should().BeEquivalentTo(new List<string> { "a", "b", "c", "" },
-                options => options.WithStrictOrdering());
+            letters.Should().ContainExactlyInOrder("a", "b", "c", "");
         }
 
         [TestMethod]
@@ -327,9 +296,7 @@ namespace NGuava.Tests.Base
             const string fourCommasAndFourSpaces = ",,,,    ";
             var threeCommasThenThreeSpaces = Splitter.On(", ").split(
                 fourCommasAndFourSpaces);
-            threeCommasThenThreeSpaces.Should().BeEquivalentTo(new List<string> { ",,,", "   " },
-                options => options.WithStrictOrdering());
+            threeCommasThenThreeSpaces.Should().ContainExactlyInOrder(",,,", "   ");
         }
-
     }
 }

@@ -91,7 +91,7 @@ namespace NGuava.Tests.Base
         }
 
         [TestMethod]
-        public void testCharacterSplitWithMultitpleLetters()
+        public void TestCharacterSplitWithMultitpleLetters()
         {
             var testCharacteringMotto = Splitter.On('-').split(
                 "Testing-rocks-Debugging-sucks");
@@ -297,6 +297,40 @@ namespace NGuava.Tests.Base
             var threeCommasThenThreeSpaces = Splitter.On(", ").split(
                 fourCommasAndFourSpaces);
             threeCommasThenThreeSpaces.Should().ContainExactlyInOrder(",,,", "   ");
+        }
+
+        [TestMethod]
+        [ExpectedException(typeof(ArgumentException))]
+        public void TestStringSplitWithEmptyString()
+        {
+            Splitter.On("");
+        }
+
+        [TestMethod]
+        public void TestStringSplitOnEmptyString()
+        {
+            var notMuch = Splitter.On(".").split("");
+            notMuch.Should().ContainExactlyInOrder("");
+        }
+
+        [TestMethod]
+        public void TestStringSplitOnEmptyStringOmitEmptyString()
+        {
+            Splitter.On(".").OmitEmptyStrings().split("").Should().BeEmpty();
+        }
+
+        [TestMethod]
+        public void TestStringSplitOnOnlyDelimiter()
+        {
+            var blankblank = Splitter.On(".").split(".");
+            blankblank.Should().ContainExactlyInOrder("", "");
+        }
+
+        [TestMethod]
+        public void TestStringSplitOnOnlyDelimitersOmitEmptyStrings()
+        {
+            var empty = Splitter.On(".").OmitEmptyStrings().split("...");
+            empty.Should().BeEmpty();
         }
     }
 }

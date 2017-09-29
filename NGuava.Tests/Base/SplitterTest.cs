@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Text.RegularExpressions;
 using FluentAssertions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using NGuava.Base;
@@ -392,5 +393,56 @@ namespace NGuava.Tests.Base
             var letters = Splitter.OnPattern(",").split(leading);
             letters.Should().ContainExactlyInOrder("", "a", "b", "c");
         }
+
+        // TODO(kevinb): the name of this method suggests it might not actually be testing what it
+        // intends to be testing?
+        [TestMethod]
+        public void TestPatternSplitWithMultipleLetters()
+        {
+            var testPatterningMotto = Splitter.OnPattern("-").split(
+                "Testing-rocks-Debugging-sucks");
+            testPatterningMotto.Should().ContainExactlyInOrder("Testing", "rocks", "Debugging", "sucks");
+        }
+
+        private static Regex LiteralDotPattern()
+        {
+            return new Regex("\\.");
+        }
+
+        [TestMethod]
+        public void TestPatternSplitWithDoubleDelimiterOmitEmptyStrings()
+        {
+            const string doubled = "a..b.c";
+            var letters = Splitter.On(LiteralDotPattern())
+                .OmitEmptyStrings().split(doubled);
+            letters.Should().ContainExactlyInOrder("a", "b", "c");
+        }
+
+        [TestMethod]
+        public void testPatternSplitLookBehind()
+        {
+            const string toSplit = ":foo::barbaz:";
+            const string regexPattern = "(?<=:)";
+            var split = Splitter.OnPattern(regexPattern).split(toSplit);
+            split.Should().ContainExactlyInOrder(":", "foo:", ":", "barbaz:");
+            // splits into chunks ending in :
+        }
+
+        [TestMethod]
+        public void testPatternSplitWordBoundary()
+        {
+            const string toSplit = "foo<bar>bletch";
+            var words = Splitter.On(new Regex("\\b")).split(toSplit);
+            words.Should().ContainExactlyInOrder("foo", "<", "bar", ">", "bletch");
+        }
+
+        [TestMethod]
+        public void testPatternSplitWordBoundary_singleCharInput()
+        {
+            const string toSplit = "f";
+            var words = Splitter.On(new Regex("\\b")).split(toSplit);
+            words.Should().ContainExactlyInOrder("f");
+        }
+
     }
 }

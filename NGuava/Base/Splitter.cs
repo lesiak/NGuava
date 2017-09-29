@@ -303,6 +303,7 @@ namespace NGuava.Base
             {
                 int offset = 0;
                 int limit = spitterLimit;
+                int nextStart = offset;
                 /*
                  * The returned string will be from the end of the last match to the
                  * beginning of the next one. nextStart is the start position of the
@@ -312,7 +313,6 @@ namespace NGuava.Base
 
                 while (offset != -1)
                 {
-                    int nextStart = offset;
                     int start = nextStart;
                     int end;
 
@@ -337,7 +337,7 @@ namespace NGuava.Base
                          * of the next returned substring -- so nextStart stays the same.
                          */
                         offset++;
-                        if (offset >= ToSplit.Length)
+                        if (offset > ToSplit.Length)
                         {
                             offset = -1;
                         }
@@ -379,6 +379,7 @@ namespace NGuava.Base
                     }
 
                     yield return ToSplit.Substring(start, end - start);
+                    nextStart = offset;
                 }
             }
 

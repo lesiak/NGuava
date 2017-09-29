@@ -487,6 +487,39 @@ namespace NGuava.Tests.Base
                 .split(longDelimiter);
             letters.Should().ContainExactlyInOrder("a", "b", "c");
         }
+        
+        [TestMethod]
+        public void TestPatternSplitWithLongLeadingDelimiter() {
+            const string longDelimiter = ", a, b, c";
+            var letters = Splitter.On(new Regex(", "))
+                .split(longDelimiter);
+            letters.Should().ContainExactlyInOrder("", "a", "b", "c");
+        }
+
+        [TestMethod]
+        public void TestPatternSplitWithLongTrailingDelimiter() {
+            const string longDelimiter = "a, b, c/ ";
+            var letters = Splitter.On(new Regex("[,/]\\s"))
+                .split(longDelimiter);
+            letters.Should().ContainExactlyInOrder("a", "b", "c", "");
+        }
+
+        [TestMethod]
+        [ExpectedException(typeof(ArgumentException))]
+        public void TestPatternSplitInvalidPattern() {
+            Splitter.On(new Regex("a*"));
+        }
+
+        [TestMethod]
+        public void TestPatternSplitWithTrim() {
+            const string jacksons = "arfo(Marlon)aorf, (Michael)orfa, afro(Jackie)orfa, "
+                              + "ofar(Jemaine), aff(Tito)";
+            var family = Splitter.On(new Regex(","))
+                .TrimResults(CharMatcher.anyOf("afro").Or(CharMatcher.Whitespace))
+                .split(jacksons);
+            family.Should()
+                .ContainExactlyInOrder("(Marlon)", "(Michael)", "(Jackie)", "(Jemaine)", "(Tito)");
+        }
 
     }
 }

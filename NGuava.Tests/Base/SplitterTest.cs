@@ -521,5 +521,37 @@ namespace NGuava.Tests.Base
                 .ContainExactlyInOrder("(Marlon)", "(Michael)", "(Jackie)", "(Jemaine)", "(Tito)");
         }
 
+        [TestMethod]
+        public void TestFixedLengthSimpleSplit()
+        {
+            const string simple = "abcde";
+            var letters = Splitter.FixedLength(2).split(simple);
+            letters.Should().ContainExactlyInOrder("ab", "cd", "e");
+        }
+
+        [TestMethod]
+        public void TestFixedLengthSplitEqualChunkLength()
+        {
+            const string simple = "abcdef";
+            var letters = Splitter.FixedLength(2).split(simple);
+            letters.Should().ContainExactlyInOrder("ab", "cd", "ef");
+        }
+
+        [TestMethod]
+        public void TestFixedLengthSplitOnlyOneChunk()
+        {
+            const string simple = "abc";
+            var letters = Splitter.FixedLength(3).split(simple);
+            letters.Should().ContainExactlyInOrder("abc");
+        }
+
+        [TestMethod]
+        public void TestFixedLengthSplitSmallerString()
+        {
+            const string simple = "ab";
+            var letters = Splitter.FixedLength(3).split(simple);
+            letters.Should().ContainExactlyInOrder("ab");
+        }
+
     }
 }

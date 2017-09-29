@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Text;
 using System.Text.RegularExpressions;
+using static NGuava.Base.Preconditions;
 
 namespace NGuava.Base
 {
@@ -30,7 +31,7 @@ namespace NGuava.Base
 
         /// <summary>
         /// Returns a splitter that uses the given single-character separator. For example,
-        /// <c>Splitter.on(',').split("foo,,bar")</c> returns an iterable containing
+        /// <code>Splitter.On(',').split("foo,,bar")</code> returns an iterable containing
         /// <c>["foo", "", "bar"]</c>
         /// </summary>
         /// <param name="separator">the character to recognize as a separator</param>
@@ -43,7 +44,7 @@ namespace NGuava.Base
         /// <summary>
         /// Returns a splitter that considers any single character matched by the
         /// given <c>CharMatcher</c> to be a separator.For example, 
-        /// <c>Splitter.On(CharMatcher.anyOf(";,")).split("foo,;bar,quux")</c>
+        /// <code>Splitter.On(CharMatcher.anyOf(";,")).split("foo,;bar,quux")</code>
         ///returns an iterable containing <c>["foo", "", "bar", "quux"]</c>.
         /// </summary>
         /// <param name="separatorMatcher">a <see cref="CharMatcher"/> that determines 
@@ -51,7 +52,7 @@ namespace NGuava.Base
         /// <returns>a splitter, with default settings, that uses this matcher</returns>
         public static Splitter On(CharMatcher separatorMatcher)
         {
-            Preconditions.CheckNotNull(separatorMatcher);
+            CheckNotNull(separatorMatcher);
             return new Splitter(ByCharMatcherSplitterStrategy(separatorMatcher));
         }
 
@@ -64,7 +65,7 @@ namespace NGuava.Base
         /// <returns>a splitter, with default settings, that recognizes that separator</returns>
         public static Splitter On(string separator)
         {
-            Preconditions.CheckArgument(separator.Length != 0, "The separator may not be the empty string.");
+            CheckArgument(separator.Length != 0, "The separator may not be the empty string.");
             if (separator.Length == 1)
             {
                 return On(separator[0]);
@@ -72,19 +73,64 @@ namespace NGuava.Base
             return new Splitter(ByStringSplitterStrategy(separator));
         }
 
-
+        /// <summary>
+        /// Returns a splitter that considers any subsequence matching <paramref name="separatorPattern"/> to be a separator.
+        /// For example, <code>Splitter.On(new Regex("\r?\n")).split(entireFile)</code> splits a string
+        /// into lines whether it uses DOS-style or UNIX-style line terminators.
+        /// </summary>
+        /// <param name="separatorPattern">
+        /// the pattern that determines whether a subsequence is a separator. This
+        /// pattern may not match the empty string.
+        /// </param>
+        /// <returns>a splitter, with default settings, that uses this pattern</returns>
+        /// <exception cref="ArgumentException">if <paramref name="separatorPattern"/> matches the empty string</exception>
         public static Splitter On(Regex separatorPattern)
         {
-            Preconditions.CheckArgument(
+            CheckArgument(
                 !separatorPattern.IsMatch(""),
                 "The pattern may not match the empty string: %s",
                 separatorPattern);
             return new Splitter(ByRegexSplitterStrategy(separatorPattern));
         }
 
+        /// <summary>
+        /// Returns a splitter that considers any subsequence matching a given pattern (regular expression)
+        /// to be a separator. For example, <code>Splitter.OnPattern("\r?\n").split(entireFile)</code> splits a
+        /// string into lines whether it uses DOS-style or UNIX-style line terminators. This is equivalent
+        /// to <code>Splitter.On(new Regex(pattern))</code>.
+        /// </summary>
+        /// <param name="separatorPattern">
+        /// the pattern that determines whether a subsequence is a separator. This
+        /// pattern may not match the empty string.
+        /// </param>
+        /// <returns>a splitter, with default settings, that uses this pattern</returns>
+        /// <exception cref="ArgumentException">if <paramref name="separatorPattern"/> matches the empty string or is a
+        /// malformed expression
+        /// </exception>
         public static Splitter OnPattern(string separatorPattern)
         {
             return On(new Regex(separatorPattern));
+        }
+
+        /// <summary>
+        /// Returns a splitter that divides strings into pieces of the given length. For example,
+        /// <code>Splitter.fixedLength(2).split("abcde")</code> returns an iterable containing
+        /// <c>["ab", "cd", "e"]</c>. The last piece can be smaller than <paramref name="length"/> but will never be
+        /// empty.
+        /// 
+        /// <p><b>Exception:</b> for consistency with separator-based splitters, <c>split("")</c>
+        /// does not yield an empty iterable, but an iterable containing <c>""</c>. This is the
+        /// only case in which <c>Iterables.size(split(input))</c> does not equal
+        /// <c>IntMath.divide(input.length(), length, CEILING)</c>. To avoid this behavior, use
+        /// <see cref="OmitEmptyStrings"/>.</p>
+        /// </summary>
+        /// <param name="length">length the desired length of pieces after splitting, a positive integer</param>
+        /// <returns>a splitter, with default settings, that can split into fixed sized pieces</returns>
+        /// <exception cref="ArgumentException">if <paramref name="length"/> is zero or negative</exception>
+        public static Splitter FixedLength(int length) {
+            CheckArgument(length > 0, "The length may not be less than 1");
+
+            return new Splitter(ByFixedLengthSplitterStrategy(length));
         }
 
         public Splitter OmitEmptyStrings()
@@ -99,13 +145,13 @@ namespace NGuava.Base
 
         public Splitter TrimResults(CharMatcher trimmer)
         {
-            Preconditions.CheckNotNull(trimmer);
+            CheckNotNull(trimmer);
             return new Splitter(enumerableProducer, omitEmptyStrings, trimmer, limit);
         }
 
         public IEnumerable<string> split(string sequence)
         {
-            Preconditions.CheckNotNull(sequence);
+            CheckNotNull(sequence);
             return MakeSplittingEnumerable(sequence);
         }
 
@@ -116,7 +162,7 @@ namespace NGuava.Base
 
         public List<string> SplitToList(string sequence)
         {
-            Preconditions.CheckNotNull(sequence);
+            CheckNotNull(sequence);
             var enumerable = MakeSplittingEnumerable(sequence);
             var result = new List<string>(enumerable);
             return result;
@@ -135,6 +181,11 @@ namespace NGuava.Base
         private static SplittingEnumerableProducer ByRegexSplitterStrategy(Regex separatorMatcher)
         {
             return (splitter, toSplit) => new ByRegexSplittingEnumerable(splitter, toSplit, separatorMatcher);
+        }
+        
+        private static SplittingEnumerableProducer ByFixedLengthSplitterStrategy(int length)
+        {
+            return (splitter, toSplit) => new ByFixedLenghtSplittingEnumerable(splitter, toSplit, length);
         }
 
 
@@ -230,6 +281,30 @@ namespace NGuava.Base
             internal override int SeparatorEnd(int separatorPosition)
             {
                 return currentMatch.Index + currentMatch.Length;
+            }
+        }
+        
+        
+        private class ByFixedLenghtSplittingEnumerable : SplittingEnumerable
+        {
+            private readonly int length;
+
+            public ByFixedLenghtSplittingEnumerable(Splitter splitter,
+                string toSplit,
+                int length) : base(splitter, toSplit)
+            {
+                this.length = length;
+            }
+
+            
+            internal override int SeparatorStart(int start) {
+                var nextChunkStart = start + length;
+                return nextChunkStart < ToSplit.Length ? nextChunkStart : -1;
+            }
+
+            
+            internal override int SeparatorEnd(int separatorPosition) {
+                return separatorPosition;
             }
         }
 

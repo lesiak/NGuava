@@ -10,22 +10,19 @@ namespace NGuava.Base
     {
         private readonly CharMatcher trimmer;
         private readonly bool omitEmptyStrings;
-        private readonly ISplittingStrategy strategy;
+        private readonly SplittingEnumerableProducer enumerableProducer;
         private readonly int limit;
 
-        private interface ISplittingStrategy
-        {
-            IEnumerable<string> MakeEnumerable(Splitter splitter, string toSplit);
-        }
+        private delegate IEnumerable<string> SplittingEnumerableProducer(Splitter splitter, string toSplit);
 
-        private Splitter(ISplittingStrategy strategy) : this(strategy, false, CharMatcher.None, int.MaxValue)
+        private Splitter(SplittingEnumerableProducer enumerableProducer) : this(enumerableProducer, false, CharMatcher.None, int.MaxValue)
         {
         }
 
-        private Splitter(ISplittingStrategy strategy, bool omitEmptyStrings,
+        private Splitter(SplittingEnumerableProducer enumerableProducer, bool omitEmptyStrings,
             CharMatcher trimmer, int limit)
         {
-            this.strategy = strategy;
+            this.enumerableProducer = enumerableProducer;
             this.omitEmptyStrings = omitEmptyStrings;
             this.trimmer = trimmer;
             this.limit = limit;
@@ -55,8 +52,7 @@ namespace NGuava.Base
         public static Splitter On(CharMatcher separatorMatcher)
         {
             Preconditions.CheckNotNull(separatorMatcher);
-
-            return new Splitter(new ByCharMatcherSplitterStrategy(separatorMatcher));
+            return new Splitter(ByCharMatcherSplitterStrategy(separatorMatcher));
         }
 
         /// <summary>
@@ -73,8 +69,9 @@ namespace NGuava.Base
             {
                 return On(separator[0]);
             }
-            return new Splitter(new ByStringSplitterStrategy(separator));
+            return new Splitter(ByStringSplitterStrategy(separator));
         }
+
 
         public static Splitter On(Regex separatorPattern)
         {
@@ -82,7 +79,7 @@ namespace NGuava.Base
                 !separatorPattern.IsMatch(""),
                 "The pattern may not match the empty string: %s",
                 separatorPattern);
-            return new Splitter(new ByRegexSplitterStrategy(separatorPattern));
+            return new Splitter(ByRegexSplitterStrategy(separatorPattern));
         }
 
         public static Splitter OnPattern(string separatorPattern)
@@ -92,7 +89,7 @@ namespace NGuava.Base
 
         public Splitter OmitEmptyStrings()
         {
-            return new Splitter(strategy, true, trimmer, limit);
+            return new Splitter(enumerableProducer, true, trimmer, limit);
         }
 
         public Splitter TrimResults()
@@ -103,7 +100,7 @@ namespace NGuava.Base
         public Splitter TrimResults(CharMatcher trimmer)
         {
             Preconditions.CheckNotNull(trimmer);
-            return new Splitter(strategy, omitEmptyStrings, trimmer, limit);
+            return new Splitter(enumerableProducer, omitEmptyStrings, trimmer, limit);
         }
 
         public IEnumerable<string> split(string sequence)
@@ -114,7 +111,7 @@ namespace NGuava.Base
 
         private IEnumerable<string> MakeSplittingEnumerable(string sequence)
         {
-            return strategy.MakeEnumerable(this, sequence);
+            return enumerableProducer.Invoke(this, sequence);
         }
 
         public List<string> SplitToList(string sequence)
@@ -125,146 +122,117 @@ namespace NGuava.Base
             return result;
         }
 
+        private static SplittingEnumerableProducer ByCharMatcherSplitterStrategy(CharMatcher separatorMatcher)
+        {
+            return (splitter, toSplit) => new ByCharMatcherSplittingEnumerable(splitter, toSplit, separatorMatcher);
+        }
 
-        private class ByCharMatcherSplitterStrategy : ISplittingStrategy
+        private static SplittingEnumerableProducer ByStringSplitterStrategy(string separatorMatcher)
+        {
+            return (splitter, toSplit) => new ByStringSplittingEnumerable(splitter, toSplit, separatorMatcher);
+        }
+
+        private static SplittingEnumerableProducer ByRegexSplitterStrategy(Regex separatorMatcher)
+        {
+            return (splitter, toSplit) => new ByRegexSplittingEnumerable(splitter, toSplit, separatorMatcher);
+        }
+
+
+        private class ByCharMatcherSplittingEnumerable : SplittingEnumerable
         {
             private readonly CharMatcher separatorMatcher;
 
-            public ByCharMatcherSplitterStrategy(CharMatcher separatorMatcher)
+            public ByCharMatcherSplittingEnumerable(Splitter splitter,
+                string toSplit,
+                CharMatcher separatorMatcher) : base(splitter, toSplit)
             {
                 this.separatorMatcher = separatorMatcher;
             }
 
-            public IEnumerable<string> MakeEnumerable(Splitter splitter, string toSplit)
+            internal override int SeparatorStart(int start)
             {
-                return new ByCharMatcherSplittingEnumerable(splitter, toSplit, separatorMatcher);
+                return separatorMatcher.IndexIn(ToSplit, start);
             }
 
-            private class ByCharMatcherSplittingEnumerable : SplittingEnumerable
+            internal override int SeparatorEnd(int separatorPosition)
             {
-                private readonly CharMatcher separatorMatcher;
-
-                public ByCharMatcherSplittingEnumerable(Splitter splitter,
-                    string toSplit,
-                    CharMatcher separatorMatcher) : base(splitter, toSplit)
-                {
-                    this.separatorMatcher = separatorMatcher;
-                }
-
-                internal override int SeparatorStart(int start)
-                {
-                    return separatorMatcher.IndexIn(ToSplit, start);
-                }
-
-                internal override int SeparatorEnd(int separatorPosition)
-                {
-                    return separatorPosition + 1;
-                }
+                return separatorPosition + 1;
             }
         }
 
-        private class ByStringSplitterStrategy : ISplittingStrategy
+
+        private class ByStringSplittingEnumerable : SplittingEnumerable
         {
             private readonly string separator;
 
-            public ByStringSplitterStrategy(string separator)
+            public ByStringSplittingEnumerable(Splitter splitter,
+                string toSplit,
+                string separator) : base(splitter, toSplit)
             {
                 this.separator = separator;
             }
 
-            public IEnumerable<string> MakeEnumerable(Splitter splitter, string toSplit)
+            internal override int SeparatorStart(int start)
             {
-                return new ByStringSplittingEnumerable(splitter, toSplit, separator);
+                var separatorLength = separator.Length;
+
+                for (int p = start, last = ToSplit.Length - separatorLength; p <= last; p++)
+                {
+                    var advanceFirstSeparatorNotMatched = false;
+                    for (var i = 0; i < separatorLength; i++)
+                    {
+                        if (ToSplit[i + p] != separator[i])
+                        {
+                            advanceFirstSeparatorNotMatched = true;
+                            break;
+                        }
+                    }
+                    if (advanceFirstSeparatorNotMatched)
+                    {
+                        continue;
+                    }
+                    return p;
+                }
+                return -1;
             }
 
-            private class ByStringSplittingEnumerable : SplittingEnumerable
+            internal override int SeparatorEnd(int separatorPosition)
             {
-                private readonly string separator;
-
-                public ByStringSplittingEnumerable(Splitter splitter,
-                    string toSplit,
-                    string separator) : base(splitter, toSplit)
-                {
-                    this.separator = separator;
-                }
-
-                internal override int SeparatorStart(int start)
-                {
-                    var separatorLength = separator.Length;
-
-                    for (int p = start, last = ToSplit.Length - separatorLength; p <= last; p++)
-                    {
-                        var advanceFirstSeparatorNotMatched = false;
-                        for (var i = 0; i < separatorLength; i++)
-                        {
-                            if (ToSplit[i+p] != separator[i])
-                            {
-                                advanceFirstSeparatorNotMatched = true;
-                                break;
-                            }
-                        }
-                        if (advanceFirstSeparatorNotMatched)
-                        {
-                            continue;
-                        }
-                        return p;
-                    }
-                    return -1;
-                }
-
-                internal override int SeparatorEnd(int separatorPosition)
-                {
-                    return separatorPosition + separator.Length;
-                }
+                return separatorPosition + separator.Length;
             }
         }
 
-        private class ByRegexSplitterStrategy : ISplittingStrategy
+
+        private class ByRegexSplittingEnumerable : SplittingEnumerable
         {
             private readonly Regex separatorPattern;
-            
-            public ByRegexSplitterStrategy(Regex separatorPattern)
+            private Match currentMatch;
+
+            public ByRegexSplittingEnumerable(Splitter splitter,
+                string toSplit,
+                Regex separatorPattern) : base(splitter, toSplit)
             {
                 this.separatorPattern = separatorPattern;
             }
-            
-            public IEnumerable<string> MakeEnumerable(Splitter splitter, string toSplit)
+
+            internal override int SeparatorStart(int start)
             {
-                return new ByRegexSplittingEnumerable(splitter, toSplit, separatorPattern);
+                var matches = separatorPattern.Matches(ToSplit, start);
+                foreach (Match match in matches)
+                {
+                    //if there is a match, return first index
+                    currentMatch = match;
+                    return currentMatch.Index;
+                }
+                return -1;
             }
 
-            private class ByRegexSplittingEnumerable : SplittingEnumerable
+            internal override int SeparatorEnd(int separatorPosition)
             {
-                private readonly Regex separatorPattern;
-                private Match currentMatch;
-
-                public ByRegexSplittingEnumerable(Splitter splitter,
-                    string toSplit,
-                    Regex separatorPattern) : base(splitter, toSplit)
-                {
-                    this.separatorPattern = separatorPattern;
-                   
-                }
-
-                internal override int SeparatorStart(int start)
-                {
-                    var matches = separatorPattern.Matches(ToSplit, start);
-                    foreach (Match match in matches)
-                    {
-                        //if there is a match, return first index
-                        currentMatch = match;
-                        return currentMatch.Index;
-                    }
-                    return -1;
-                }
-                
-                internal override int SeparatorEnd(int separatorPosition)
-                {
-                    return currentMatch.Index + currentMatch.Length;
-                }
+                return currentMatch.Index + currentMatch.Length;
             }
-
         }
+
 
         private abstract class SplittingEnumerable : IEnumerable<string>
         {
@@ -390,7 +358,6 @@ namespace NGuava.Base
                     .Append(']')
                     .ToString();
             }
-            
         }
     }
 }

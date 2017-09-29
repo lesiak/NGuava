@@ -429,7 +429,7 @@ namespace NGuava.Tests.Base
         }
 
         [TestMethod]
-        public void testPatternSplitWordBoundary()
+        public void TestPatternSplitWordBoundary()
         {
             const string toSplit = "foo<bar>bletch";
             var words = Splitter.On(new Regex("\\b")).split(toSplit);
@@ -437,11 +437,55 @@ namespace NGuava.Tests.Base
         }
 
         [TestMethod]
-        public void testPatternSplitWordBoundary_singleCharInput()
+        public void TestPatternSplitWordBoundary_singleCharInput()
         {
             const string toSplit = "f";
             var words = Splitter.On(new Regex("\\b")).split(toSplit);
             words.Should().ContainExactlyInOrder("f");
+        }
+        
+        [TestMethod]
+        public void TestPatternSplitWordBoundary_singleWordInput() {
+            const string toSplit = "foo";
+            var words = Splitter.On(new Regex("\\b")).split(toSplit);
+            words.Should().ContainExactlyInOrder("foo");
+        }
+
+        [TestMethod]
+        public void TestPatternSplitEmptyToken() {
+            const string emptyToken = "a. .c";
+            var letters = Splitter.On(LiteralDotPattern()).TrimResults().split(emptyToken);
+            letters.Should().ContainExactlyInOrder("a", "", "c");
+        }
+
+        [TestMethod]
+        public void TestPatternSplitEmptyTokenOmitEmptyStrings() {
+            const string emptyToken = "a. .c";
+            var letters = Splitter.On(LiteralDotPattern())
+                .OmitEmptyStrings().TrimResults().split(emptyToken);
+            letters.Should().ContainExactlyInOrder("a", "c");
+        }
+
+        [TestMethod]
+        public void TestPatternSplitOnOnlyDelimiter() {
+            var blankblank = Splitter.On(LiteralDotPattern()).split(".");
+
+            blankblank.Should().ContainExactlyInOrder("", "");
+        }
+
+        [TestMethod]
+        public void TestPatternSplitOnOnlyDelimitersOmitEmptyStrings() {
+            var empty = Splitter.On(LiteralDotPattern()).OmitEmptyStrings()
+                .split("...");
+            empty.Should().BeEmpty();
+        }
+
+        [TestMethod]
+        public void TestPatternSplitMatchingIsGreedy() {
+            const string longDelimiter = "a, b,   c";
+            var letters = Splitter.On(new Regex(",\\s*"))
+                .split(longDelimiter);
+            letters.Should().ContainExactlyInOrder("a", "b", "c");
         }
 
     }

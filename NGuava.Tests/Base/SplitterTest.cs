@@ -352,5 +352,45 @@ namespace NGuava.Tests.Base
             var letters = Splitter.OnPattern(",").split(simple);
             letters.Should().ContainExactlyInOrder("a", "b", "c");
         }
+
+        [TestMethod]
+        public void TestPatternSimpleSplitWithNoDelimiter()
+        {
+            const string simple = "a,b,c";
+            var letters = Splitter.OnPattern("foo").split(simple);
+            letters.Should().ContainExactlyInOrder("a,b,c");
+        }
+
+        [TestMethod]
+        public void TestPatternSplitWithDoubleDelimiter()
+        {
+            const string doubled = "a,,b,c";
+            var letters = Splitter.OnPattern(",").split(doubled);
+            letters.Should().ContainExactlyInOrder("a", "", "b", "c");
+        }
+
+        [TestMethod]
+        public void TestPatternSplitWithDoubleDelimiterAndSpace()
+        {
+            const string doubled = "a,, b,c";
+            var letters = Splitter.OnPattern(",").split(doubled);
+            letters.Should().ContainExactlyInOrder("a", "", " b", "c");
+        }
+
+        [TestMethod]
+        public void TestPatternSplitWithTrailingDelimiter()
+        {
+            const string trailing = "a,b,c,";
+            var letters = Splitter.OnPattern(",").split(trailing);
+            letters.Should().ContainExactlyInOrder("a", "b", "c", "");
+        }
+
+        [TestMethod]
+        public void TestPatternSplitWithLeadingDelimiter()
+        {
+            const string leading = ",a,b,c";
+            var letters = Splitter.OnPattern(",").split(leading);
+            letters.Should().ContainExactlyInOrder("", "a", "b", "c");
+        }
     }
 }

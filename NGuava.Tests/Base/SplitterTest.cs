@@ -553,5 +553,41 @@ namespace NGuava.Tests.Base
             letters.Should().ContainExactlyInOrder("ab");
         }
 
+        [TestMethod]
+        public void TestFixedLengthSplitEmptyString()
+        {
+            const string simple = "";
+            var letters = Splitter.FixedLength(3).split(simple);
+            letters.Should().ContainExactlyInOrder("");
+        }
+
+        [TestMethod]
+        public void TestFixedLengthSplitEmptyStringWithOmitEmptyStrings()
+        {
+            Splitter.FixedLength(3).OmitEmptyStrings().split("").Should().BeEmpty();
+        }
+
+        [TestMethod]
+        public void TestFixedLengthSplitIntoChars()
+        {
+            const string simple = "abcd";
+            var letters = Splitter.FixedLength(1).split(simple);
+            letters.Should().ContainExactlyInOrder("a", "b", "c", "d");
+        }
+
+        [TestMethod]
+        [ExpectedException(typeof(ArgumentException))]
+        public void TestFixedLengthSplitZeroChunkLen()
+        {
+            Splitter.FixedLength(0);  
+        }
+
+        [TestMethod]
+        [ExpectedException(typeof(ArgumentException))]
+        public void TestFixedLengthSplitNegativeChunkLen()
+        {
+            Splitter.FixedLength(-1);
+        }
+
     }
 }

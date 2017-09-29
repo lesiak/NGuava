@@ -332,5 +332,25 @@ namespace NGuava.Tests.Base
             var empty = Splitter.On(".").OmitEmptyStrings().split("...");
             empty.Should().BeEmpty();
         }
+
+        [TestMethod]
+        public void TestStringSplitWithTrim()
+        {
+            const string jacksons = "arfo(Marlon)aorf, (Michael)orfa, afro(Jackie)orfa, "
+                              + "ofar(Jemaine), aff(Tito)";
+            var family = Splitter.On(",")
+                .TrimResults(CharMatcher.anyOf("afro").Or(CharMatcher.Whitespace))
+                .split(jacksons);
+            family.Should()
+                .ContainExactlyInOrder("(Marlon)", "(Michael)", "(Jackie)", "(Jemaine)", "(Tito)");
+        }
+
+        [TestMethod]
+        public void TestPatternSimpleSplit()
+        {
+            const string simple = "a,b,c";
+            var letters = Splitter.OnPattern(",").split(simple);
+            letters.Should().ContainExactlyInOrder("a", "b", "c");
+        }
     }
 }

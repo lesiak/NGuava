@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Text;
+using System.Text.RegularExpressions;
 
 namespace NGuava.Base
 {
@@ -73,6 +74,20 @@ namespace NGuava.Base
                 return On(separator[0]);
             }
             return new Splitter(new ByStringSplitterStrategy(separator));
+        }
+
+        public static Splitter On(Regex separatorPattern)
+        {
+            Preconditions.CheckArgument(
+                !separatorPattern.IsMatch(""),
+                "The pattern may not match the empty string: %s",
+                separatorPattern);
+            return new Splitter(new ByRegexSplitterStrategy(separatorPattern));
+        }
+
+        public static Splitter OnPattern(string separatorPattern)
+        {
+            return On(new Regex(separatorPattern));
         }
 
         public Splitter OmitEmptyStrings()
@@ -204,6 +219,52 @@ namespace NGuava.Base
             }
         }
 
+        private class ByRegexSplitterStrategy : ISplittingStrategy
+        {
+            private readonly Regex separatorPattern;
+            
+            public ByRegexSplitterStrategy(Regex separatorPattern)
+            {
+                this.separatorPattern = separatorPattern;
+            }
+            
+            public IEnumerable<string> MakeEnumerable(Splitter splitter, string toSplit)
+            {
+                return new ByRegexSplittingEnumerable(splitter, toSplit, separatorPattern);
+            }
+
+            private class ByRegexSplittingEnumerable : SplittingEnumerable
+            {
+                private readonly Regex separatorPattern;
+                private Match currentMatch;
+
+                public ByRegexSplittingEnumerable(Splitter splitter,
+                    string toSplit,
+                    Regex separatorPattern) : base(splitter, toSplit)
+                {
+                    this.separatorPattern = separatorPattern;
+                   
+                }
+
+                internal override int SeparatorStart(int start)
+                {
+                    var matches = separatorPattern.Matches(ToSplit, start);
+                    foreach (Match match in matches)
+                    {
+                        //if there is a match, return first index
+                        currentMatch = match;
+                        return currentMatch.Index;
+                    }
+                    return -1;
+                }
+                
+                internal override int SeparatorEnd(int separatorPosition)
+                {
+                    return currentMatch.Index + currentMatch.Length;
+                }
+            }
+
+        }
 
         private abstract class SplittingEnumerable : IEnumerable<string>
         {

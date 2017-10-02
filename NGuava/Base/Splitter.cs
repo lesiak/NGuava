@@ -133,6 +133,27 @@ namespace NGuava.Base
             return new Splitter(ByFixedLengthSplitterStrategy(length));
         }
 
+        /// <summary>
+        /// Returns a splitter that behaves equivalently to <c>this</c> splitter but stops splitting after
+        /// it reaches the limit. The limit defines the maximum number of items returned by the iterator,
+        /// or the maximum size of the list returned by <see cref="SplitToList"/>.
+        /// 
+        /// <p>For example, <code>Splitter.on(',').limit(3).split("a,b,c,d")</code> returns an iterable
+        /// containing <c>["a", "b", "c,d"]</c>. When omitting empty strings, the omitted strings do not
+        /// count. Hence, <code>Splitter.on(',').limit(3).omitEmptyStrings().split("a,,,b,,,c,d")</code> returns
+        /// an iterable containing <c>["a", "b", "c,d"]</c>. When trim is requested, all entries are
+        /// trimmed, including the last. Hence
+        /// <code>Splitter.on(',').limit(3).trimResults().split(" a , b , c , d ")</code> results in
+        /// <c>["a", "b", "c , d"]</c>.</p>
+        /// </summary>
+        /// <param name="limit">the maximum number of items returned</param>
+        /// <returns>a splitter with the desired configuration</returns>
+        public Splitter Limit(int limit)
+        {
+            CheckArgument(limit > 0, "must be greater than zero: %s", limit);
+            return new Splitter(enumerableProducer, omitEmptyStrings, trimmer, limit);
+        }
+
         public Splitter OmitEmptyStrings()
         {
             return new Splitter(enumerableProducer, true, trimmer, limit);

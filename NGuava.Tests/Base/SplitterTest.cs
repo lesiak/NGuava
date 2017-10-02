@@ -338,7 +338,7 @@ namespace NGuava.Tests.Base
         public void TestStringSplitWithTrim()
         {
             const string jacksons = "arfo(Marlon)aorf, (Michael)orfa, afro(Jackie)orfa, "
-                              + "ofar(Jemaine), aff(Tito)";
+                                    + "ofar(Jemaine), aff(Tito)";
             var family = Splitter.On(",")
                 .TrimResults(CharMatcher.anyOf("afro").Or(CharMatcher.Whitespace))
                 .split(jacksons);
@@ -443,23 +443,26 @@ namespace NGuava.Tests.Base
             var words = Splitter.On(new Regex("\\b")).split(toSplit);
             words.Should().ContainExactlyInOrder("f");
         }
-        
+
         [TestMethod]
-        public void TestPatternSplitWordBoundary_singleWordInput() {
+        public void TestPatternSplitWordBoundary_singleWordInput()
+        {
             const string toSplit = "foo";
             var words = Splitter.On(new Regex("\\b")).split(toSplit);
             words.Should().ContainExactlyInOrder("foo");
         }
 
         [TestMethod]
-        public void TestPatternSplitEmptyToken() {
+        public void TestPatternSplitEmptyToken()
+        {
             const string emptyToken = "a. .c";
             var letters = Splitter.On(LiteralDotPattern()).TrimResults().split(emptyToken);
             letters.Should().ContainExactlyInOrder("a", "", "c");
         }
 
         [TestMethod]
-        public void TestPatternSplitEmptyTokenOmitEmptyStrings() {
+        public void TestPatternSplitEmptyTokenOmitEmptyStrings()
+        {
             const string emptyToken = "a. .c";
             var letters = Splitter.On(LiteralDotPattern())
                 .OmitEmptyStrings().TrimResults().split(emptyToken);
@@ -467,29 +470,33 @@ namespace NGuava.Tests.Base
         }
 
         [TestMethod]
-        public void TestPatternSplitOnOnlyDelimiter() {
+        public void TestPatternSplitOnOnlyDelimiter()
+        {
             var blankblank = Splitter.On(LiteralDotPattern()).split(".");
 
             blankblank.Should().ContainExactlyInOrder("", "");
         }
 
         [TestMethod]
-        public void TestPatternSplitOnOnlyDelimitersOmitEmptyStrings() {
+        public void TestPatternSplitOnOnlyDelimitersOmitEmptyStrings()
+        {
             var empty = Splitter.On(LiteralDotPattern()).OmitEmptyStrings()
                 .split("...");
             empty.Should().BeEmpty();
         }
 
         [TestMethod]
-        public void TestPatternSplitMatchingIsGreedy() {
+        public void TestPatternSplitMatchingIsGreedy()
+        {
             const string longDelimiter = "a, b,   c";
             var letters = Splitter.On(new Regex(",\\s*"))
                 .split(longDelimiter);
             letters.Should().ContainExactlyInOrder("a", "b", "c");
         }
-        
+
         [TestMethod]
-        public void TestPatternSplitWithLongLeadingDelimiter() {
+        public void TestPatternSplitWithLongLeadingDelimiter()
+        {
             const string longDelimiter = ", a, b, c";
             var letters = Splitter.On(new Regex(", "))
                 .split(longDelimiter);
@@ -497,7 +504,8 @@ namespace NGuava.Tests.Base
         }
 
         [TestMethod]
-        public void TestPatternSplitWithLongTrailingDelimiter() {
+        public void TestPatternSplitWithLongTrailingDelimiter()
+        {
             const string longDelimiter = "a, b, c/ ";
             var letters = Splitter.On(new Regex("[,/]\\s"))
                 .split(longDelimiter);
@@ -506,14 +514,16 @@ namespace NGuava.Tests.Base
 
         [TestMethod]
         [ExpectedException(typeof(ArgumentException))]
-        public void TestPatternSplitInvalidPattern() {
+        public void TestPatternSplitInvalidPattern()
+        {
             Splitter.On(new Regex("a*"));
         }
 
         [TestMethod]
-        public void TestPatternSplitWithTrim() {
+        public void TestPatternSplitWithTrim()
+        {
             const string jacksons = "arfo(Marlon)aorf, (Michael)orfa, afro(Jackie)orfa, "
-                              + "ofar(Jemaine), aff(Tito)";
+                                    + "ofar(Jemaine), aff(Tito)";
             var family = Splitter.On(new Regex(","))
                 .TrimResults(CharMatcher.anyOf("afro").Or(CharMatcher.Whitespace))
                 .split(jacksons);
@@ -579,7 +589,7 @@ namespace NGuava.Tests.Base
         [ExpectedException(typeof(ArgumentException))]
         public void TestFixedLengthSplitZeroChunkLen()
         {
-            Splitter.FixedLength(0);  
+            Splitter.FixedLength(0);
         }
 
         [TestMethod]
@@ -589,5 +599,115 @@ namespace NGuava.Tests.Base
             Splitter.FixedLength(-1);
         }
 
+        [TestMethod]
+        public void TestLimitLarge()
+        {
+            const string simple = "abcd";
+            var letters = Splitter.FixedLength(1).Limit(100).split(simple);
+            letters.Should().ContainExactlyInOrder("a", "b", "c", "d");
+        }
+
+        [TestMethod]
+        public void TestLimitOne()
+        {
+            const string simple = "abcd";
+            var letters = Splitter.FixedLength(1).Limit(1).split(simple);
+            letters.Should().ContainExactlyInOrder("abcd");
+        }
+
+        [TestMethod]
+        public void TestLimitFixedLength()
+        {
+            const string simple = "abcd";
+            var letters = Splitter.FixedLength(1).Limit(2).split(simple);
+            letters.Should().ContainExactlyInOrder("a", "bcd");
+        }
+
+        [TestMethod]
+        public void TestLimitSeparator()
+        {
+            const string simple = "a,b,c,d";
+            var items = COMMA_SPLITTER.Limit(2).split(simple);
+            items.Should().ContainExactlyInOrder("a", "b,c,d");
+        }
+
+        [TestMethod]
+        public void TestLimitExtraSeparators()
+        {
+            const string text = "a,,,b,,c,d";
+            var items = COMMA_SPLITTER.Limit(2).split(text);
+            items.Should().ContainExactlyInOrder("a", ",,b,,c,d");
+        }
+
+        [TestMethod]
+        public void TestLimitExtraSeparatorsOmitEmpty()
+        {
+            const string text = "a,,,b,,c,d";
+            var items = COMMA_SPLITTER.Limit(2).OmitEmptyStrings().split(text);
+            items.Should().ContainExactlyInOrder("a", "b,,c,d");
+        }
+
+        [TestMethod]
+        public void TestLimitExtraSeparatorsOmitEmpty3()
+        {
+            const string text = "a,,,b,,c,d";
+            var items = COMMA_SPLITTER.Limit(3).OmitEmptyStrings().split(text);
+            items.Should().ContainExactlyInOrder("a", "b", "c,d");
+        }
+
+        [TestMethod]
+        public void TestLimitExtraSeparatorsTrim()
+        {
+            const string text = ",,a,,  , b ,, c,d ";
+            var items = COMMA_SPLITTER.Limit(2).OmitEmptyStrings().TrimResults().split(text);
+            items.Should().ContainExactlyInOrder("a", "b ,, c,d");
+        }
+
+        [TestMethod]
+        public void TestLimitExtraSeparatorsTrim3()
+        {
+            const string text = ",,a,,  , b ,, c,d ";
+            var items = COMMA_SPLITTER.Limit(3).OmitEmptyStrings().TrimResults().split(text);
+            items.Should().ContainExactlyInOrder("a", "b", "c,d");
+        }
+
+        [TestMethod]
+        public void TestLimitExtraSeparatorsTrim1()
+        {
+            const string text = ",,a,,  , b ,, c,d ";
+            var items = COMMA_SPLITTER.Limit(1).OmitEmptyStrings().TrimResults().split(text);
+            items.Should().ContainExactlyInOrder("a,,  , b ,, c,d");
+        }
+
+        [TestMethod]
+        public void TestLimitExtraSeparatorsTrim1NoOmit()
+        {
+            const string text = ",,a,,  , b ,, c,d ";
+            var items = COMMA_SPLITTER.Limit(1).TrimResults().split(text);
+            items.Should().ContainExactlyInOrder(",,a,,  , b ,, c,d");
+        }
+
+        [TestMethod]
+        public void TestLimitExtraSeparatorsTrim1Empty()
+        {
+            const string text = "";
+            var items = COMMA_SPLITTER.Limit(1).split(text);
+            items.Should().ContainExactlyInOrder("");
+        }
+
+        [TestMethod]
+        public void TestLimitExtraSeparatorsTrim1EmptyOmit()
+        {
+            const string text = "";
+            var items = COMMA_SPLITTER.OmitEmptyStrings().Limit(1).split(text);
+            items.Should().BeEmpty();
+        }
+
+        [TestMethod]
+        [ExpectedException(typeof(ArgumentException))]
+        public void TestInvalidZeroLimit()
+        {
+            COMMA_SPLITTER.Limit(0);
+        }
     }
 }
